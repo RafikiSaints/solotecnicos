@@ -117,7 +117,7 @@ async function main() {
   const tecnicosCreados: any[] = []
   for (const t of tecnicosData) {
     const { categoria, ...rest } = t
-    const { data, error } = await sb.from('tecnicos').insert(rest).select().single()
+    const { data, error } = await sb.from('tecnicos').insert(rest as any).select().single()
     if (error) { console.error('   ✗', t.nombre_empresa, error.message); continue }
     if (data) {
       tecnicosCreados.push(data)
