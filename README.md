@@ -305,3 +305,5 @@ npm run seed      # Sembrar datos de prueba
 **Credenciales de prueba** (después de `npm run seed`):
 - Técnico: `tecnico@test.cl` / `Test1234!`
 - Admin:   `admin@test.cl` / `Admin1234!`
+#   s o l o t e c n i c o s  
+ 
