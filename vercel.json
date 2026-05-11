@@ -1,0 +1,7 @@
+{
+  "crons": [
+    { "path": "/api/cron/verificar-planes",    "schedule": "0 6 * * *" },
+    { "path": "/api/cron/alertas-vencimiento", "schedule": "0 9 * * *" },
+    { "path": "/api/cron/alertas-demanda",     "schedule": "0 9 * * 1" }
+  ]
+}
