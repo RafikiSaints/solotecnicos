@@ -16,17 +16,24 @@ interface SidebarProps {
   mensajesNoLeidos?: number
 }
 
-const ITEMS = [
+type Item = {
+  href: string
+  label: string
+  icon: typeof BarChart3
+  badge?: string
+  lockFeature?: 'agenda' | 'estadisticas'
+}
+const ITEMS: Item[] = [
   { href: '/dashboard',                 label: 'Resumen',         icon: BarChart3 },
   { href: '/dashboard/perfil',          label: 'Mi perfil',       icon: User },
   { href: '/dashboard/fotos',           label: 'Fotos y portafolio', icon: Camera },
   { href: '/dashboard/mensajes',        label: 'Mensajes',        icon: MessageSquare, badge: 'mensajes' },
   { href: '/dashboard/resenas',         label: 'Reseñas',         icon: Star },
-  { href: '/dashboard/agenda',          label: 'Agenda',          icon: Calendar, lockFeature: 'agenda' as const },
-  { href: '/dashboard/estadisticas',    label: 'Estadísticas',    icon: LineChart, lockFeature: 'estadisticas' as const },
+  { href: '/dashboard/agenda',          label: 'Agenda',          icon: Calendar, lockFeature: 'agenda' },
+  { href: '/dashboard/estadisticas',    label: 'Estadísticas',    icon: LineChart, lockFeature: 'estadisticas' },
   { href: '/dashboard/certificaciones', label: 'Certificaciones', icon: Award },
   { href: '/dashboard/plan',            label: 'Mi plan',         icon: CreditCard },
-] as const
+]
 
 export function SidebarDashboard({ tecnico, mensajesNoLeidos = 0 }: SidebarProps) {
   const pathname = usePathname()
