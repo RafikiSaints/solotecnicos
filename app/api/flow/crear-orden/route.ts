@@ -8,7 +8,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'faltan datos' }, { status: 400 })
     }
     if (!process.env.FLOW_API_KEY || process.env.FLOW_API_KEY === 'YOUR_FLOW_API_KEY') {
-      return NextResponse.json({ error: 'Flow no configurado — agrega credenciales en .env.local' }, { status: 503 })
+      return NextResponse.json({ error: 'Flow no configurado — agrega FLOW_API_KEY y FLOW_SECRET en Vercel' }, { status: 503 })
     }
     const { url } = await crearOrdenPago({
       tecnicoId, email, plan, tipo,
@@ -16,6 +16,10 @@ export async function POST(req: Request) {
     })
     return NextResponse.json({ url })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    console.error('[flow/crear-orden] error:', e)
+    return NextResponse.json({
+      error: e.message || 'Error desconocido',
+      detalle: 'Revisa Vercel Logs para más info'
+    }, { status: 500 })
   }
 }
