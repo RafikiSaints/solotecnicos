@@ -14,9 +14,10 @@ interface PlanCardProps {
   current?: boolean
 }
 
+// Ambas listas tienen la misma cantidad de bullets (9) para que las cards queden de la misma altura.
 const FEATURES: Record<'pro' | 'elite', string[]> = {
   pro: [
-    'Hasta 20 fotos',
+    'Hasta 30 fotos',
     'WhatsApp visible',
     'Estadísticas detalladas',
     'Responder reseñas',
@@ -27,13 +28,15 @@ const FEATURES: Record<'pro' | 'elite', string[]> = {
     'Alertas de demanda',
   ],
   elite: [
-    'Fotos ilimitadas',
+    'Hasta 100 fotos',
     '🥇 Primer lugar en resultados',
-    'Banner en resultados',
+    'Banner destacado',
     'Hasta 5 sucursales',
     'Video promocional',
-    'Todo lo de PRO',
     'Soporte prioritario',
+    'Todo lo de PRO incluido',
+    'Etiquetas ilimitadas',
+    'Mayor visibilidad SEO',
   ],
 }
 
@@ -60,27 +63,35 @@ export function PlanCard({ tecnicoId, email, plan, periodo, destacado, current }
   }
 
   return (
-    <div className={`relative rounded-xl border-2 p-6 ${destacado ? 'border-oro bg-oro/5' : 'border-borde bg-white'}`}>
-      {destacado && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-oro text-azul text-xs font-bold px-3 py-1 rounded-full">
-          MÁS POPULAR
-        </div>
-      )}
+    <div className={`relative rounded-xl border-2 p-6 flex flex-col h-full ${destacado ? 'border-oro bg-oro/5' : 'border-borde bg-white'}`}>
+      {/* Espacio reservado SIEMPRE para que ambas cards queden alineadas (haya badge o no) */}
+      <div className="h-6 flex justify-center items-start -mt-9 mb-2">
+        {destacado && (
+          <div className="bg-oro text-azul text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+            MÁS POPULAR
+          </div>
+        )}
+      </div>
+
       <div className="text-center">
-        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${plan === 'elite' ? 'bg-oro/20 text-oro' : 'bg-azul/10 text-azul'}`}>
+        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${plan === 'elite' ? 'bg-oro/20 text-oro' : 'bg-azul/10 text-azul-mid'}`}>
           <Sparkles size={12} /> {p.nombre}
         </div>
         <div className="mt-3">
           <span className="font-display text-4xl font-bold text-azul">{precioFormateado(precio)}</span>
           <span className="text-sm text-gris-3"> / {periodo === 'anual' ? 'año' : 'mes'}</span>
         </div>
-        {periodo === 'anual' && (
-          <p className="text-xs text-verde font-medium mt-1">
-            Ahorras {precioFormateado(ahorroAnual(plan))} al año
-          </p>
-        )}
+        {/* Espacio reservado SIEMPRE (haya o no ahorro) para alinear */}
+        <div className="h-5 mt-1">
+          {periodo === 'anual' && (
+            <p className="text-xs text-verde font-semibold">
+              Ahorras {precioFormateado(ahorroAnual(plan))} al año
+            </p>
+          )}
+        </div>
       </div>
-      <ul className="mt-6 space-y-2">
+
+      <ul className="mt-5 space-y-2 flex-1">
         {FEATURES[plan].map(f => (
           <li key={f} className="flex items-start gap-2 text-sm text-gris-4">
             <Check size={14} className="text-verde mt-0.5 shrink-0" />
@@ -88,6 +99,7 @@ export function PlanCard({ tecnicoId, email, plan, periodo, destacado, current }
           </li>
         ))}
       </ul>
+
       <Button
         className="w-full mt-6"
         variant={destacado ? 'primary' : 'outline'}

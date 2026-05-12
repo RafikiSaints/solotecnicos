@@ -13,7 +13,7 @@ import { ArrowRightLeft, Ban, Sparkles } from 'lucide-react'
 import type { Tecnico, Suscripcion } from '@/types/database.types'
 
 export function PlanGestion({ tecnico, email, suscripciones: ini }: { tecnico: Tecnico; email: string; suscripciones: Suscripcion[] }) {
-  const [periodo, setPeriodo] = useState<'mensual' | 'anual'>('anual') // arranca en anual para sugerir el ahorro
+  const [periodo, setPeriodo] = useState<'mensual' | 'anual'>('mensual')
   const [suscripciones, setSuscripciones] = useState(ini)
   const [openCambiar, setOpenCambiar] = useState(false)
   const [openCancelar, setOpenCancelar] = useState(false)
@@ -194,8 +194,8 @@ function SeleccionDePlanes({ periodo, onPeriodo, tecnico, email }: { periodo: 'm
         <TogglePeriodo periodo={periodo} onChange={onPeriodo} />
       </div>
 
-      {/* Cards */}
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Cards — mismo tamaño con items-stretch + padding-top para espacio del MÁS POPULAR */}
+      <div className="grid md:grid-cols-2 gap-6 items-stretch pt-3">
         <div className="relative">
           {periodo === 'anual' && (
             <div className="absolute -top-2 -right-2 z-10 bg-verde text-white text-[10px] font-extrabold px-2 py-1 rounded-full shadow-md">

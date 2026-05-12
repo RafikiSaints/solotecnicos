@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Image from 'next/image'
-import { Upload, X, Star } from 'lucide-react'
+import { Upload, X, Star, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
@@ -85,28 +85,46 @@ export function GaleriaEditor({ tecnico, fotosIniciales }: { tecnico: Tecnico; f
           Aún no has subido fotos. Sube al menos 3 para destacar tu perfil.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {fotos.map(f => (
-            <div key={f.id} className="relative group aspect-square rounded-md overflow-hidden bg-papel border border-borde">
-              <Image src={f.url} alt="" fill sizes="200px" className="object-cover" />
-              {f.es_portada && (
-                <div className="absolute top-2 left-2 bg-oro text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                  PORTADA
-                </div>
-              )}
-              <div className="absolute inset-0 bg-azul/0 group-hover:bg-azul/40 transition-colors flex items-end justify-end p-2 gap-1 opacity-0 group-hover:opacity-100">
-                {!f.es_portada && (
-                  <button onClick={() => marcarPortada(f)} className="p-1.5 bg-white rounded-full hover:bg-oro hover:text-white" title="Marcar como portada">
-                    <Star size={14} />
-                  </button>
-                )}
-                <button onClick={() => eliminar(f)} className="p-1.5 bg-white rounded-full hover:bg-rojo hover:text-white">
-                  <X size={14} />
-                </button>
-              </div>
+        <>
+          {fotos.length > limite && limite < 9999 && (
+            <div className="rounded-md border-2 border-oro/30 bg-oro/5 p-3 text-sm">
+              <strong className="text-oro">⚠️ Tienes {fotos.length} fotos pero tu plan solo muestra {limite} al público.</strong>
+              <p className="text-xs text-gris-4 mt-1">
+                Las {fotos.length - limite} fotos extras siguen guardadas y se mostrarán automáticamente si activas un plan superior. No las eliminamos.
+              </p>
             </div>
-          ))}
-        </div>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {fotos.map((f, idx) => {
+              const oculta = idx >= limite && limite < 9999
+              return (
+                <div key={f.id} className={`relative group aspect-square rounded-md overflow-hidden bg-papel border-2 ${oculta ? 'border-oro/50' : 'border-borde'}`}>
+                  <Image src={f.url} alt="" fill sizes="200px" className={`object-cover ${oculta ? 'opacity-50' : ''}`} />
+                  {f.es_portada && !oculta && (
+                    <div className="absolute top-2 left-2 bg-oro text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                      PORTADA
+                    </div>
+                  )}
+                  {oculta && (
+                    <div className="absolute top-2 left-2 bg-oro text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                      <EyeOff size={10} /> SOLO PRO
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-azul/0 group-hover:bg-azul/40 transition-colors flex items-end justify-end p-2 gap-1 opacity-0 group-hover:opacity-100">
+                    {!f.es_portada && !oculta && (
+                      <button onClick={() => marcarPortada(f)} className="p-1.5 bg-white rounded-full hover:bg-oro hover:text-white" title="Marcar como portada">
+                        <Star size={14} />
+                      </button>
+                    )}
+                    <button onClick={() => eliminar(f)} className="p-1.5 bg-white rounded-full hover:bg-rojo hover:text-white">
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
       )}
     </div>
   )

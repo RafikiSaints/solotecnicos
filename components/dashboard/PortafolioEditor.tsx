@@ -90,27 +90,44 @@ export function PortafolioEditor({ tecnico, trabajosIniciales }: { tecnico: Tecn
         </div>
       )}
 
-      {trabajos.map((t, i) => (
-        <div key={t.id} className="border border-borde rounded-lg p-4 space-y-3">
-          <div className="flex justify-between items-start">
-            <Input value={t.titulo} onChange={e => {
-              const nuevo = { ...t, titulo: e.target.value }
+      {trabajos.length > limite && limite < 9999 && (
+        <div className="rounded-md border-2 border-oro/30 bg-oro/5 p-3 text-sm">
+          <strong className="text-oro">⚠️ Tienes {trabajos.length} trabajos pero tu plan solo muestra {limite} al público.</strong>
+          <p className="text-xs text-gris-4 mt-1">
+            Los {trabajos.length - limite} trabajos extras siguen guardados y se mostrarán cuando renueves a un plan superior.
+          </p>
+        </div>
+      )}
+
+      {trabajos.map((t, i) => {
+        const oculto = i >= limite && limite < 9999
+        return (
+          <div key={t.id} className={`border-2 rounded-lg p-4 space-y-3 ${oculto ? 'border-oro/40 bg-oro/5' : 'border-borde'}`}>
+            {oculto && (
+              <div className="text-xs font-semibold text-oro flex items-center gap-1.5">
+                👁️‍🗨️ Oculto al público — disponible con plan PRO/Elite
+              </div>
+            )}
+            <div className="flex justify-between items-start">
+              <Input value={t.titulo} onChange={e => {
+                const nuevo = { ...t, titulo: e.target.value }
+                setTrabajos(trabajos.map((x, j) => j === i ? nuevo : x))
+                actualizar(nuevo)
+              }} />
+              <Button variant="ghost" size="sm" onClick={() => eliminar(t.id)}><Trash2 size={14} /></Button>
+            </div>
+            <Textarea value={t.descripcion || ''} onChange={e => {
+              const nuevo = { ...t, descripcion: e.target.value }
               setTrabajos(trabajos.map((x, j) => j === i ? nuevo : x))
               actualizar(nuevo)
-            }} />
-            <Button variant="ghost" size="sm" onClick={() => eliminar(t.id)}><Trash2 size={14} /></Button>
+            }} placeholder="Descripción breve" />
+            <div className="grid grid-cols-2 gap-2">
+              <FotoUpload label="Antes" url={t.foto_antes} onUpload={f => subirFoto(t.id, f, 'foto_antes')} />
+              <FotoUpload label="Después" url={t.foto_despues} onUpload={f => subirFoto(t.id, f, 'foto_despues')} />
+            </div>
           </div>
-          <Textarea value={t.descripcion || ''} onChange={e => {
-            const nuevo = { ...t, descripcion: e.target.value }
-            setTrabajos(trabajos.map((x, j) => j === i ? nuevo : x))
-            actualizar(nuevo)
-          }} placeholder="Descripción breve" />
-          <div className="grid grid-cols-2 gap-2">
-            <FotoUpload label="Antes" url={t.foto_antes} onUpload={f => subirFoto(t.id, f, 'foto_antes')} />
-            <FotoUpload label="Después" url={t.foto_despues} onUpload={f => subirFoto(t.id, f, 'foto_despues')} />
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

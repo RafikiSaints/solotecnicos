@@ -21,7 +21,7 @@ type Item = {
   label: string
   icon: typeof BarChart3
   badge?: string
-  lockFeature?: 'agenda' | 'estadisticas'
+  lockFeature?: 'agenda' | 'estadisticas' | 'certificaciones'
 }
 const ITEMS: Item[] = [
   { href: '/dashboard',                 label: 'Resumen',         icon: BarChart3 },
@@ -31,7 +31,7 @@ const ITEMS: Item[] = [
   { href: '/dashboard/resenas',         label: 'Reseñas',         icon: Star },
   { href: '/dashboard/agenda',          label: 'Agenda',          icon: Calendar, lockFeature: 'agenda' },
   { href: '/dashboard/estadisticas',    label: 'Estadísticas',    icon: LineChart, lockFeature: 'estadisticas' },
-  { href: '/dashboard/certificaciones', label: 'Certificaciones', icon: Award },
+  { href: '/dashboard/certificaciones', label: 'Certificaciones', icon: Award, lockFeature: 'certificaciones' },
   { href: '/dashboard/plan',            label: 'Mi plan',         icon: CreditCard },
 ]
 

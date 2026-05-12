@@ -14,6 +14,7 @@ import { CompartirLink } from './CompartirLink'
 import { FormularioCotizacion } from './FormularioCotizacion'
 import { SistemaResenas } from './SistemaResenas'
 import { clpFormat } from '@/lib/utils'
+import { limiteNumerico } from '@/lib/planes'
 import { useEffect } from 'react'
 import type {
   Tecnico, Region, Categoria, Foto, Servicio, Resena, Trabajo, Certificacion,
@@ -33,7 +34,16 @@ interface Props {
 }
 
 export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, resenas, trabajos, certificaciones }: Props) {
-  const portada = fotos.find(f => f.es_portada) || fotos[0]
+  // Limitar lo visible según el plan vigente. Las extras se quedan en BD pero no se muestran al público
+  // (cuando el técnico renueve el plan, se vuelven a mostrar automáticamente).
+  const limFotos = limiteNumerico(tecnico, 'fotos')
+  const limTrabajos = limiteNumerico(tecnico, 'trabajos_portafolio')
+  const limServicios = limiteNumerico(tecnico, 'servicios')
+  const fotosVisibles = fotos.slice(0, limFotos)
+  const trabajosVisibles = trabajos.slice(0, limTrabajos)
+  const serviciosVisibles = servicios.slice(0, limServicios)
+
+  const portada = fotosVisibles.find(f => f.es_portada) || fotosVisibles[0]
 
   useEffect(() => {
     fetch('/api/visitas', {
@@ -130,11 +140,11 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
           )}
 
           {/* Servicios */}
-          {servicios.length > 0 && (
+          {serviciosVisibles.length > 0 && (
             <div>
               <h2 className="font-display text-2xl text-azul mb-3">Servicios</h2>
               <div className="grid sm:grid-cols-2 gap-3">
-                {servicios.map(s => (
+                {serviciosVisibles.map(s => (
                   <div key={s.id} className="card">
                     <div className="flex justify-between items-start gap-2 mb-2">
                       <div className="flex-1">
@@ -159,18 +169,18 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
           )}
 
           {/* Galería */}
-          {fotos.length > 0 && (
+          {fotosVisibles.length > 0 && (
             <div>
               <h2 className="font-display text-2xl text-azul mb-3">Galería</h2>
-              <GaleriaFotos fotos={fotos} />
+              <GaleriaFotos fotos={fotosVisibles} />
             </div>
           )}
 
           {/* Portafolio */}
-          {trabajos.length > 0 && (
+          {trabajosVisibles.length > 0 && (
             <div>
               <h2 className="font-display text-2xl text-azul mb-3">Antes y después</h2>
-              <PortafolioTrabajos trabajos={trabajos} />
+              <PortafolioTrabajos trabajos={trabajosVisibles} />
             </div>
           )}
 
