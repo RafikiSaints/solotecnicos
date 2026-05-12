@@ -46,6 +46,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
         lat: form.lat,
         lng: form.lng,
         comunas_cobertura: form.comunas_cobertura,
+        etiquetas: form.etiquetas,
         telefono: form.telefono,
         whatsapp: form.whatsapp,
         email_publico: form.email_publico,
@@ -84,6 +85,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
   }
 
   const limiteSvc = limiteNumerico(tecnico, 'servicios')
+  const limiteEtiq = limiteNumerico(tecnico, 'etiquetas')
   const whatsappPermitido = puedeHacer(tecnico, 'whatsapp_visible')
 
   async function agregarServicio() {
@@ -190,6 +192,9 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
 
       {/* CATEGORÍAS */}
       <Seccion titulo={`Categorías (${cats.length}/5)`}>
+        <p className="text-xs text-gris-3 -mt-2 mb-2">
+          Las categorías principales que ofreces. Aparecen como filtro y badge en tu perfil.
+        </p>
         <div className="flex flex-wrap gap-2">
           {categorias.map(c => (
             <button
@@ -204,11 +209,53 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
         </div>
       </Seccion>
 
+      {/* ETIQUETAS DE SERVICIO */}
+      <Seccion titulo={`Etiquetas de servicio (${(form.etiquetas || []).length}/${limiteEtiq === 9999 ? '∞' : limiteEtiq})`}>
+        <p className="text-xs text-gris-3 -mt-2 mb-2">
+          Palabras clave específicas para que te encuentren al buscar. Ejemplos: <em>lavadoras Samsung</em>, <em>aire acondicionado split</em>, <em>iPhone 13</em>, <em>placa madre</em>, <em>fuga gas</em>, <em>cámaras Hikvision</em>.
+        </p>
+        <InputChips
+          values={form.etiquetas || []}
+          onChange={v => {
+            if (v.length > limiteEtiq) {
+              push(`Límite alcanzado: ${limiteEtiq} etiquetas en tu plan`, 'error')
+              return
+            }
+            setForm({ ...form, etiquetas: v })
+          }}
+          placeholder="Escribe una palabra clave y Enter…"
+          helper={`${limiteEtiq === 9999 ? 'Ilimitadas' : `Máximo ${limiteEtiq} etiquetas`} en tu plan`}
+        />
+      </Seccion>
+
       {/* SERVICIOS */}
       <Seccion titulo={`Servicios (${svcs.length}/${limiteSvc === 9999 ? '∞' : limiteSvc})`}>
         <p className="text-xs text-gris-3 -mt-2 mb-2">
-          Si no tienes precio fijo, déjalo vacío y aparecerá un botón "Cotizar" en tu perfil.
+          Si no tienes precio fijo, déjalo vacío y aparecerá un botón <strong>"Cotizar"</strong> en tu perfil.
         </p>
+
+        {/* Ejemplo guía */}
+        {svcs.length === 0 && (
+          <div className="rounded-md border-2 border-dashed border-azul-mid/30 bg-azul-mid/5 p-4 space-y-2 text-sm">
+            <div className="font-semibold text-azul-mid flex items-center gap-1.5">💡 Ejemplo de cómo se vería:</div>
+            <div className="grid sm:grid-cols-2 gap-2">
+              <div className="bg-white rounded p-2.5 border border-borde">
+                <div className="text-xs text-gris-3 mb-1">Servicio con precio fijo:</div>
+                <strong className="text-azul block">Limpieza split 9000 BTU</strong>
+                <span className="text-xs text-gris-4">Mantención completa con químico</span>
+                <div className="text-sm font-bold text-azul-mid mt-1">desde $25.000</div>
+              </div>
+              <div className="bg-white rounded p-2.5 border border-borde">
+                <div className="text-xs text-gris-3 mb-1">Servicio sin precio (cotizar):</div>
+                <strong className="text-azul block">Instalación split personalizada</strong>
+                <span className="text-xs text-gris-4">Depende de la complejidad</span>
+                <div className="text-sm font-semibold text-rojo mt-1">💬 Solicitar cotización →</div>
+              </div>
+            </div>
+            <p className="text-xs text-gris-3">Click en "+ Agregar servicio" para crear los tuyos.</p>
+          </div>
+        )}
+
         <div className="space-y-2">
           {svcs.map((s, i) => (
             <ServicioRow

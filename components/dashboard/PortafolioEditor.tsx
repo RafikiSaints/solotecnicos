@@ -53,11 +53,42 @@ export function PortafolioEditor({ tecnico, trabajosIniciales }: { tecnico: Tecn
     <div className="card space-y-4">
       <div className="flex justify-between">
         <div>
-          <h3 className="font-display text-xl text-azul">Portafolio: antes y después</h3>
-          <p className="text-sm text-gris-3">{trabajos.length} / {limite === 9999 ? '∞' : limite}</p>
+          <h3 className="font-display text-xl text-azul font-bold">Portafolio: antes y después</h3>
+          <p className="text-sm text-gris-3">{trabajos.length} / {limite === 9999 ? '∞' : limite} trabajos</p>
         </div>
         <Button size="sm" onClick={agregar}><Plus size={14} /> Agregar trabajo</Button>
       </div>
+
+      {trabajos.length === 0 && (
+        <div className="rounded-md border-2 border-dashed border-azul-mid/30 bg-azul-mid/5 p-4 space-y-3">
+          <div className="font-semibold text-azul-mid flex items-center gap-1.5 text-sm">💡 Ejemplo de un buen "antes y después":</div>
+
+          <div className="bg-white rounded-lg border border-borde p-4 space-y-2">
+            <strong className="text-azul block">Limpieza de aire acondicionado split en departamento</strong>
+            <p className="text-sm text-gris-4">
+              Cliente nos llamó porque el split estaba botando agua y olía mal. Limpieza profunda con químico, cambio de filtros y revisión de la cañería de drenaje. Quedó como nuevo.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="relative aspect-video bg-gris-3/20 rounded flex items-center justify-center text-xs text-gris-3 font-semibold">
+                📸 FOTO ANTES
+              </div>
+              <div className="relative aspect-video bg-verde/10 rounded flex items-center justify-center text-xs text-verde font-semibold">
+                📸 FOTO DESPUÉS
+              </div>
+            </div>
+          </div>
+
+          <div className="text-xs text-gris-3 space-y-1">
+            <p><strong>Tips para que conviertan más:</strong></p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>Toma fotos con buena luz, desde el mismo ángulo</li>
+              <li>El "antes" debe mostrar el problema claramente (suciedad, rotura, etc.)</li>
+              <li>El "después" debe verse limpio, ordenado, terminado</li>
+              <li>Describe brevemente qué hiciste y por qué</li>
+            </ul>
+          </div>
+        </div>
+      )}
 
       {trabajos.map((t, i) => (
         <div key={t.id} className="border border-borde rounded-lg p-4 space-y-3">

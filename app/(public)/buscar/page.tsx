@@ -55,7 +55,11 @@ export default async function BuscarPage({ searchParams }: { searchParams: Recor
   if (domicilio) query = query.eq('atiende_domicilio', true)
   if (verificado) query = query.eq('verificado', true)
   if (ah24) query = query.eq('atiende_24h', true)
-  if (q) query = query.or(`nombre_empresa.ilike.%${q}%,descripcion.ilike.%${q}%,comuna.ilike.%${q}%`)
+  if (q) {
+    // Buscar en nombre, descripción, comuna o etiquetas
+    // El operador `cs.{...}` es "contains" para arrays — busca si la etiqueta está
+    query = query.or(`nombre_empresa.ilike.%${q}%,descripcion.ilike.%${q}%,comuna.ilike.%${q}%,etiquetas.cs.{${q.toLowerCase()}}`)
+  }
 
   query = query.order('plan', { ascending: false }).order('rating_promedio', { ascending: false }).limit(40)
 

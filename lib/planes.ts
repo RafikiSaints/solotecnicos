@@ -9,6 +9,7 @@ export const PLANES = {
       fotos: 3,
       trabajos_portafolio: 2,
       servicios: 5,
+      etiquetas: 5,
       puede_responder_resenas: false,
       whatsapp_visible: false,
       estadisticas: false,
@@ -30,9 +31,10 @@ export const PLANES = {
     precio_mensual: 14990,
     precio_anual: 149900,
     limites: {
-      fotos: 20,
-      trabajos_portafolio: 20,
+      fotos: 30,
+      trabajos_portafolio: 30,
       servicios: 50,
+      etiquetas: 15,
       puede_responder_resenas: true,
       whatsapp_visible: true,
       estadisticas: true,
@@ -54,9 +56,10 @@ export const PLANES = {
     precio_mensual: 34990,
     precio_anual: 349900,
     limites: {
-      fotos: Infinity,
-      trabajos_portafolio: Infinity,
-      servicios: Infinity,
+      fotos: 100,
+      trabajos_portafolio: 100,
+      servicios: 200,
+      etiquetas: 100,
       puede_responder_resenas: true,
       whatsapp_visible: true,
       estadisticas: true,
@@ -95,7 +98,7 @@ export function puedeHacer(
 
 export function limiteNumerico(
   tecnico: Pick<Tecnico, 'plan' | 'plan_vence_en'>,
-  feature: 'fotos' | 'servicios' | 'trabajos_portafolio' | 'sucursales'
+  feature: 'fotos' | 'servicios' | 'trabajos_portafolio' | 'sucursales' | 'etiquetas'
 ): number {
   const plan = planVigente(tecnico)
   const val = PLANES[plan].limites[feature]

@@ -10,6 +10,7 @@ const FILAS: { label: string; key: string }[] = [
   { label: 'Fotos en perfil',           key: 'fotos' },
   { label: 'Trabajos portafolio',       key: 'trabajos_portafolio' },
   { label: 'Servicios listados',        key: 'servicios' },
+  { label: 'Etiquetas de búsqueda',     key: 'etiquetas' },
   { label: 'Responder reseñas',         key: 'puede_responder_resenas' },
   { label: 'WhatsApp visible',          key: 'whatsapp_visible' },
   { label: 'Badge verificado',          key: 'badge_verificado' },

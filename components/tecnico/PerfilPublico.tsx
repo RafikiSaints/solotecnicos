@@ -219,10 +219,22 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
           )}
           {tecnico.comunas_cobertura && tecnico.comunas_cobertura.length > 0 && (
             <div className="card">
-              <h4 className="font-display text-lg text-azul mb-2">Zonas de cobertura</h4>
+              <h4 className="font-display text-lg text-azul mb-2 font-bold">Zonas de cobertura</h4>
               <div className="flex flex-wrap gap-1.5">
                 {tecnico.comunas_cobertura.map(c => (
                   <span key={c} className="px-2 py-0.5 rounded-full bg-papel text-gris-4 text-xs">{c}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {tecnico.etiquetas && tecnico.etiquetas.length > 0 && (
+            <div className="card">
+              <h4 className="font-display text-lg text-azul mb-2 font-bold">Especialidades</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {tecnico.etiquetas.map(e => (
+                  <span key={e} className="inline-flex items-center px-2.5 py-1 rounded-full bg-cyan/10 text-cyan text-xs font-medium border border-cyan/20">
+                    #{e}
+                  </span>
                 ))}
               </div>
             </div>
