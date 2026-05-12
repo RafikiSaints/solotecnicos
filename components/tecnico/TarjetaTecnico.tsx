@@ -23,11 +23,22 @@ export function TarjetaTecnico({ tecnico, servicios = [], compact = false }: Tar
   const isPro = tecnico.plan === 'pro'
 
   return (
-    <article className="relative bg-white border border-borde rounded-lg overflow-hidden hover:shadow-card transition-shadow duration-200 group">
-      {/* Ribbon plan */}
-      {(isElite || isPro) && (
-        <div className={`absolute top-0 right-0 z-10 px-3 py-1 text-[10px] font-bold tracking-wide rounded-bl-lg ${isElite ? 'bg-oro text-azul' : 'bg-azul text-white'}`}>
-          {isElite ? 'ELITE' : 'PRO'}
+    <article className={`relative rounded-lg overflow-hidden hover:shadow-card transition-shadow duration-200 group ${
+      isElite
+        ? 'bg-gradient-to-br from-oro/10 via-white to-white border-2 border-oro shadow-soft'
+        : 'bg-white border border-borde'
+    }`}>
+      {/* Banner Elite destacado */}
+      {isElite && (
+        <div className="bg-gradient-to-r from-oro to-coral text-white text-xs font-bold px-4 py-1.5 flex items-center gap-2">
+          <span>👑</span>
+          <span className="tracking-wider">RECOMENDADO ELITE</span>
+        </div>
+      )}
+      {/* Ribbon PRO (más sutil) */}
+      {isPro && (
+        <div className="absolute top-0 right-0 z-10 bg-azul text-white text-[10px] font-bold px-3 py-1 tracking-wide rounded-bl-lg">
+          PRO
         </div>
       )}
 

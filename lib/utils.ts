@@ -77,6 +77,19 @@ export function generarLinkPersonalizado(slug: string): string {
   return `${base}/t/${slug}`
 }
 
+/**
+ * Convierte URL de YouTube/Vimeo a URL embed.
+ * Soporta: youtube.com/watch?v=XXX, youtu.be/XXX, youtube.com/shorts/XXX, vimeo.com/XXX
+ */
+export function youtubeEmbedUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([\w-]{11})/)
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`
+  const vimeo = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`
+  return null
+}
+
 export const DIAS_SEMANA = [
   { key: 'lunes', label: 'Lunes' },
   { key: 'martes', label: 'Martes' },

@@ -14,8 +14,8 @@ import { CompartirLink } from './CompartirLink'
 import { BannerReclamar } from './BannerReclamar'
 import { FormularioCotizacion } from './FormularioCotizacion'
 import { SistemaResenas } from './SistemaResenas'
-import { clpFormat } from '@/lib/utils'
-import { limiteNumerico } from '@/lib/planes'
+import { clpFormat, youtubeEmbedUrl } from '@/lib/utils'
+import { limiteNumerico, puedeHacer } from '@/lib/planes'
 import { useEffect } from 'react'
 import type {
   Tecnico, Region, Categoria, Foto, Servicio, Resena, Trabajo, Certificacion,
@@ -142,6 +142,22 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
             <div>
               <h2 className="font-display text-2xl text-azul mb-3">Sobre {tecnico.nombre_empresa}</h2>
               <p className="text-gris-4 leading-relaxed whitespace-pre-wrap">{tecnico.descripcion}</p>
+            </div>
+          )}
+
+          {/* Video promocional (solo Elite con video) */}
+          {puedeHacer(tecnico, 'video') && tecnico.video_url && youtubeEmbedUrl(tecnico.video_url) && (
+            <div>
+              <h2 className="font-display text-2xl text-azul mb-3">Conoce nuestro trabajo</h2>
+              <div className="relative aspect-video rounded-lg overflow-hidden border border-borde bg-papel">
+                <iframe
+                  src={youtubeEmbedUrl(tecnico.video_url) || ''}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Video promocional"
+                />
+              </div>
             </div>
           )}
 

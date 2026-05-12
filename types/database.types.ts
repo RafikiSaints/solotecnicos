@@ -64,6 +64,7 @@ export interface Tecnico {
   link_google_business: string | null
   etiquetas: string[] | null
   sucursales_texto: string | null
+  video_url: string | null
   plan: PlanTipo
   plan_vence_en: string | null
   verificado: boolean

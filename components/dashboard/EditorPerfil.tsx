@@ -54,6 +54,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
         link_google_maps: form.link_google_maps,
         link_google_business: form.link_google_business,
         sucursales_texto: form.sucursales_texto,
+        video_url: form.video_url,
         horarios: form.horarios,
         atiende_24h: form.atiende_24h,
         atiende_domicilio: form.atiende_domicilio,
@@ -206,6 +207,29 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
           placeholder="https://g.co/kgs/..."
           helper="Tu perfil de empresa en Google. Aumenta la confianza de los clientes."
         />
+      </Seccion>
+
+      {/* VIDEO PROMOCIONAL (solo Elite) */}
+      <Seccion titulo="Video promocional (Elite)">
+        {puedeHacer(tecnico, 'video') ? (
+          <>
+            <Input
+              label="URL del video"
+              value={form.video_url || ''}
+              onChange={e => setForm({ ...form, video_url: e.target.value })}
+              placeholder="https://www.youtube.com/watch?v=..."
+              helper="Pega la URL completa de un video de YouTube o Vimeo. Aparecerá embebido en tu perfil."
+            />
+            <p className="text-xs text-gris-3">
+              <strong>Tip:</strong> Un video de 30-60 segundos donde te presentes, muestres tu trabajo o explique algún caso real funciona muy bien. Aumenta hasta 2x las cotizaciones.
+            </p>
+          </>
+        ) : (
+          <div className="rounded-md border border-borde p-3 bg-papel/50 text-sm text-gris-3 flex items-center gap-2">
+            <span className="text-oro">🔒</span>
+            <span><strong>Video promocional</strong> — disponible solo en plan Elite. Te diferencia de la competencia con un video de tu trabajo o presentación.</span>
+          </div>
+        )}
       </Seccion>
 
       {/* CATEGORÍAS */}

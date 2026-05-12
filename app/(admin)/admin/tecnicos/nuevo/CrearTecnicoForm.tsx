@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
+import { InputChips } from '@/components/dashboard/InputChips'
 import { createClient } from '@/lib/supabase/client'
 import type { Region, Categoria } from '@/types/database.types'
 
@@ -23,6 +24,8 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
     comuna: '',
     direccion: '',
     categoria_ids: [] as number[],
+    etiquetas: [] as string[],
+    comunas_cobertura: [] as string[],
   })
 
   function toggleCategoria(id: number) {
@@ -53,6 +56,8 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
       region_id: Number(form.region_id),
       comuna: form.comuna || null,
       direccion: form.direccion || null,
+      etiquetas: form.etiquetas.length ? form.etiquetas : null,
+      comunas_cobertura: form.comunas_cobertura.length ? form.comunas_cobertura : null,
     }).select().single()
     if (error || !tecnico) {
       push(`Error: ${error?.message}`, 'error')
@@ -110,6 +115,23 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="card space-y-3">
+        <h3 className="font-display text-lg text-azul font-bold">Etiquetas y cobertura</h3>
+        <InputChips
+          label="Etiquetas de servicio (palabras clave)"
+          values={form.etiquetas}
+          onChange={v => setForm({ ...form, etiquetas: v })}
+          placeholder="Ej: Samsung, lavadoras, fugas gas, iPhone..."
+          helper="Mejoran las búsquedas. Separa con Enter o coma. Sin límite estricto en carga manual."
+        />
+        <InputChips
+          label="Comunas de cobertura (servicio a domicilio)"
+          values={form.comunas_cobertura}
+          onChange={v => setForm({ ...form, comunas_cobertura: v })}
+          placeholder="Las Condes, Vitacura, Providencia..."
+        />
       </div>
 
       <div className="flex gap-2 justify-end">

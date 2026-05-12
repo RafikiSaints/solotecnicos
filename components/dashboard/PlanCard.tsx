@@ -29,13 +29,13 @@ const FEATURES: Record<'pro' | 'elite', string[]> = {
   ],
   elite: [
     'Hasta 100 fotos',
-    '🥇 Primer lugar en resultados',
-    'Banner destacado en búsquedas',
+    '🏆 Máxima prioridad en resultados',
+    'Banner dorado "RECOMENDADO" en directorio',
     'Aparece en home destacados',
     'Múltiples puntos de atención',
     'Soporte prioritario por WhatsApp',
+    'Video promocional en perfil',
     'Etiquetas ilimitadas para SEO',
-    'Reportes mensuales por email',
     'Todo lo de PRO incluido',
   ],
 }
