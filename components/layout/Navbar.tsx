@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { Menu, X, LogOut, LayoutDashboard, ExternalLink, User } from 'lucide-react'
+import { Menu, X, LogOut, LayoutDashboard, ExternalLink, User, ChevronDown, UserPlus, Wrench } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/ui/Logo'
@@ -24,6 +24,7 @@ export function Navbar() {
   const [tipo, setTipo] = useState<UserType>(null)
   const [slug, setSlug] = useState<string | null>(null)
   const [menuUser, setMenuUser] = useState(false)
+  const [menuRegistro, setMenuRegistro] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -149,8 +150,51 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/login"><Button variant="ghost" size="sm">Iniciar sesión</Button></Link>
-              <Link href="/registro-tecnico"><Button size="sm">Soy técnico →</Button></Link>
+              <Link href="/login">
+                <Button variant="ghost" size="sm">Iniciar sesión</Button>
+              </Link>
+              <div className="relative">
+                <button
+                  onClick={() => setMenuRegistro(m => !m)}
+                  className="btn-primary inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold"
+                >
+                  Registrarse
+                  <ChevronDown size={14} className={`transition-transform ${menuRegistro ? 'rotate-180' : ''}`} />
+                </button>
+                {menuRegistro && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setMenuRegistro(false)} />
+                    <div className="absolute top-full right-0 mt-2 w-72 bg-white border border-borde rounded-lg shadow-card py-2 z-50 animate-fade-in">
+                      <Link
+                        href="/registro-cliente"
+                        onClick={() => setMenuRegistro(false)}
+                        className="flex items-start gap-3 px-4 py-3 hover:bg-papel transition-colors"
+                      >
+                        <div className="h-10 w-10 rounded-md bg-cyan/10 flex items-center justify-center shrink-0">
+                          <UserPlus size={18} className="text-cyan" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-azul text-sm">Soy cliente</div>
+                          <div className="text-xs text-gris-3">Busco un técnico — guarda historial de cotizaciones y reseñas</div>
+                        </div>
+                      </Link>
+                      <Link
+                        href="/registro-tecnico"
+                        onClick={() => setMenuRegistro(false)}
+                        className="flex items-start gap-3 px-4 py-3 hover:bg-papel transition-colors border-t border-borde"
+                      >
+                        <div className="h-10 w-10 rounded-md bg-oro/10 flex items-center justify-center shrink-0">
+                          <Wrench size={18} className="text-oro" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-azul text-sm">Soy técnico</div>
+                          <div className="text-xs text-gris-3">Quiero recibir cotizaciones de clientes — publico mi negocio gratis</div>
+                        </div>
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
             </>
           )}
         </div>
