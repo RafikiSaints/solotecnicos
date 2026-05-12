@@ -25,33 +25,37 @@ export function GaleriaEditor({ tecnico, fotosIniciales }: { tecnico: Tecnico; f
     setUploading(true)
     const nuevas: Foto[] = []
     for (const file of Array.from(files)) {
-      const path = `${tecnico.id}/${Date.now()}-${file.name}`
-      const { error } = await supabase.storage.from('tecnico-fotos').upload(path, file)
-      if (error) {
-        push(`Error subiendo ${file.name}`, 'error')
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload/foto', { method: 'POST', body: form })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Error desconocido' }))
+        console.error('upload error', err)
+        push(`Error: ${err.error || 'No se pudo subir'}`, 'error')
         continue
       }
-      const { data: { publicUrl } } = supabase.storage.from('tecnico-fotos').getPublicUrl(path)
-      const { data } = await supabase.from('tecnico_fotos').insert({
-        tecnico_id: tecnico.id,
-        url: publicUrl,
-        storage_path: path,
-        orden: fotos.length + nuevas.length,
-      }).select().single()
-      if (data) nuevas.push(data)
+      const { foto } = await res.json()
+      if (foto) nuevas.push(foto)
     }
     setFotos([...fotos, ...nuevas])
     setUploading(false)
-    push(`${nuevas.length} foto(s) subida(s)`)
+    e.target.value = '' // reset input
+    if (nuevas.length > 0) push(`${nuevas.length} foto(s) subida(s)`)
   }
 
   async function eliminar(foto: Foto) {
     if (!confirm('¿Eliminar esta foto?')) return
-    if (foto.storage_path) {
-      await supabase.storage.from('tecnico-fotos').remove([foto.storage_path])
+    const res = await fetch('/api/upload/foto', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foto_id: foto.id }),
+    })
+    if (res.ok) {
+      setFotos(fotos.filter(f => f.id !== foto.id))
+      push('Foto eliminada')
+    } else {
+      push('Error al eliminar', 'error')
     }
-    await supabase.from('tecnico_fotos').delete().eq('id', foto.id)
-    setFotos(fotos.filter(f => f.id !== foto.id))
   }
 
   async function marcarPortada(foto: Foto) {
@@ -71,7 +75,7 @@ export function GaleriaEditor({ tecnico, fotosIniciales }: { tecnico: Tecnico; f
         <label className="cursor-pointer">
           <input type="file" multiple accept="image/*" className="hidden" onChange={onUpload} disabled={uploading} />
           <span className="btn-primary inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium">
-            <Upload size={14} /> Subir fotos
+            <Upload size={14} /> {uploading ? 'Subiendo...' : 'Subir fotos'}
           </span>
         </label>
       </div>
