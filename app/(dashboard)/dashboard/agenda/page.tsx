@@ -24,8 +24,9 @@ export default async function AgendaPage() {
 
   return (
     <div className="max-w-5xl">
-      <h1 className="font-display text-3xl text-azul mb-4">Agenda</h1>
-      <AgendaCalendario citas={citas || []} />
+      <h1 className="font-display text-3xl text-azul mb-1 font-bold">Agenda</h1>
+      <p className="text-sm text-gris-3 mb-4">Tu calendario personal de citas y visitas a clientes</p>
+      <AgendaCalendario citas={citas || []} tecnico={tecnico} />
     </div>
   )
 }
