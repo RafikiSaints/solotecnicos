@@ -15,6 +15,7 @@ import { planVigente } from '@/lib/planes'
 interface TecnicoAdmin {
   id: string
   slug: string | null
+  user_id: string | null
   nombre_empresa: string
   nombre_contacto: string | null
   comuna: string | null
@@ -146,6 +147,7 @@ export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
               <div className="flex flex-wrap gap-1">
                 {t.activo ? <Badge tone="verde">Activo</Badge> : <Badge tone="rojo">Inactivo</Badge>}
                 {t.verificado && <Badge tone="azul"><ShieldCheck size={10} />Verificado</Badge>}
+                {!t.user_id && <Badge tone="oro">🪪 Sin reclamar</Badge>}
               </div>
             ),
           },

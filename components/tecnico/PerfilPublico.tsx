@@ -11,6 +11,7 @@ import { GaleriaFotos } from './GaleriaFotos'
 import { PortafolioTrabajos } from './PortafolioTrabajos'
 import { CertificacionesBadges } from './CertificacionesBadges'
 import { CompartirLink } from './CompartirLink'
+import { BannerReclamar } from './BannerReclamar'
 import { FormularioCotizacion } from './FormularioCotizacion'
 import { SistemaResenas } from './SistemaResenas'
 import { clpFormat } from '@/lib/utils'
@@ -108,6 +109,11 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
           </div>
         </div>
       </section>
+
+      {/* Banner "reclamar perfil" si no tiene dueño */}
+      {!tecnico.user_id && (
+        <BannerReclamar tecnicoId={tecnico.id} tecnicoNombre={tecnico.nombre_empresa} />
+      )}
 
       {/* MOBILE STICKY ACTIONS */}
       <div className="md:hidden sticky top-[57px] z-30 bg-white border-b border-borde">

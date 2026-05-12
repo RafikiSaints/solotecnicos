@@ -3,11 +3,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Logo } from '@/components/ui/Logo'
 import { ToastContainer } from '@/components/ui/Toast'
-import { Users, Star, Award, CreditCard, BookOpen, BarChart3, Tags } from 'lucide-react'
+import { Users, Star, Award, CreditCard, BookOpen, BarChart3, Tags, UserCheck } from 'lucide-react'
 
 const ITEMS = [
   { href: '/admin',                 label: 'Resumen',         icon: BarChart3 },
   { href: '/admin/tecnicos',        label: 'Técnicos',        icon: Users },
+  { href: '/admin/claims',          label: 'Reclamos',        icon: UserCheck },
   { href: '/admin/categorias',      label: 'Categorías',      icon: Tags },
   { href: '/admin/resenas',         label: 'Reseñas',         icon: Star },
   { href: '/admin/certificaciones', label: 'Certificaciones', icon: Award },
