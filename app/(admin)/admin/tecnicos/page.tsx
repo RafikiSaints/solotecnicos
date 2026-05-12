@@ -1,46 +1,21 @@
-import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
+import { createServiceClient } from '@/lib/supabase/server'
+import { TecnicosTable } from './TecnicosTable'
 
 export default async function AdminTecnicos() {
-  const sb = createClient()
+  const sb = createServiceClient()
   const { data: tecnicos } = await sb.from('tecnicos')
-    .select('*, regiones(nombre)')
+    .select('id, slug, nombre_empresa, nombre_contacto, comuna, plan, plan_vence_en, verificado, activo, destacado, rating_promedio, total_resenas, telefono, email_publico, created_at, region_id, regiones(nombre)')
     .order('created_at', { ascending: false })
-    .limit(100)
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="font-display text-3xl text-azul">Técnicos</h1>
-        <Link href="/admin/tecnicos/nuevo"><Button>+ Crear técnico</Button></Link>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="font-display text-3xl text-azul font-bold">Técnicos</h1>
+          <p className="text-sm text-gris-3">{tecnicos?.length || 0} técnicos registrados</p>
+        </div>
       </div>
-      <div className="card overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-left text-xs text-gris-3 uppercase border-b border-borde">
-            <tr><th className="pb-2">Empresa</th><th>Región</th><th>Plan</th><th>Rating</th><th>Estado</th><th></th></tr>
-          </thead>
-          <tbody>
-            {tecnicos?.map((t: any) => (
-              <tr key={t.id} className="border-b border-borde">
-                <td className="py-2">
-                  <Link href={`/tecnico/${t.slug}`} className="text-azul hover:underline font-medium">{t.nombre_empresa}</Link>
-                  <div className="text-xs text-gris-3">{t.comuna}</div>
-                </td>
-                <td>{t.regiones?.nombre}</td>
-                <td><Badge tone={t.plan === 'elite' ? 'oro' : t.plan === 'pro' ? 'azul' : 'gris'}>{t.plan}</Badge></td>
-                <td>{(t.rating_promedio || 0).toFixed(1)} ({t.total_resenas})</td>
-                <td>
-                  {t.activo ? <Badge tone="verde">Activo</Badge> : <Badge tone="rojo">Inactivo</Badge>}
-                  {t.verificado && <Badge tone="azul" className="ml-1">Verificado</Badge>}
-                </td>
-                <td><Link href={`/admin/tecnicos/${t.id}`} className="text-xs text-azul hover:underline">Editar</Link></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <TecnicosTable tecnicos={(tecnicos || []) as any} />
     </div>
   )
 }
