@@ -35,8 +35,18 @@ export async function POST(req: Request) {
     const sb = createServiceClient()
 
     const orden = String(status.commerceOrder || '')
-    const tecnicoId = orden.split('-')[1]
-    if (!tecnicoId) return NextResponse.json({ ok: true })
+    // commerceOrder formato: ST-{8 chars uuid sin guiones}-{timestamp}
+    const tecShort = orden.split('-')[1]
+    if (!tecShort) return NextResponse.json({ ok: true })
+
+    // Buscar técnico que tenga un user_id/id que empiece con esos 8 caracteres
+    const { data: tecnicos } = await sb.from('tecnicos').select('id')
+    const tecnico = tecnicos?.find(t => t.id.replace(/-/g, '').startsWith(tecShort))
+    if (!tecnico) {
+      console.error('[webhook flow] técnico no encontrado para orden', orden)
+      return NextResponse.json({ ok: true })
+    }
+    const tecnicoId = tecnico.id
 
     if (status.status === 2) {
       // Pagada → activar plan

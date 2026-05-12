@@ -52,6 +52,12 @@ export async function crearOrdenPago(params: {
   const monto = PLANES[params.plan][`precio_${params.tipo}`]
   if (!monto) throw new Error('Monto inválido')
 
+  // commerceOrder máx 45 chars en Flow
+  // UUID sin guiones (32) → primeros 8 + timestamp en base36 (~9) + prefijo ST- (3) = ~22 chars
+  const tecShort = params.tecnicoId.replace(/-/g, '').slice(0, 8)
+  const ts = Date.now().toString(36)
+  const commerceOrder = `ST-${tecShort}-${ts}` // ej: ST-a1b2c3d4-lj8zxk2
+
   const body: Record<string, string> = {
     apiKey: API_KEY,
     amount: String(monto),
@@ -60,7 +66,7 @@ export async function crearOrdenPago(params: {
     email: params.email,
     urlConfirmation: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/flow`,
     urlReturn: params.urlRetorno,
-    commerceOrder: `ST-${params.tecnicoId}-${Date.now()}`,
+    commerceOrder,
     paymentMethod: '9',
   }
   body.s = firmar(body)
