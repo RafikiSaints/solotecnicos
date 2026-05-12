@@ -9,6 +9,7 @@ const schema = z.object({
   cliente_nombre: z.string().min(2),
   cliente_email: z.string().email(),
   cliente_telefono: z.string().optional().nullable(),
+  cliente_user_id: z.string().uuid().optional().nullable(),
   descripcion: z.string().min(20),
   urgencia: z.enum(['normal', 'urgente', '24h']).default('normal'),
   comuna_servicio: z.string().optional().nullable(),

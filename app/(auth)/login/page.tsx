@@ -17,15 +17,23 @@ export default function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword(form)
+    const { data, error } = await supabase.auth.signInWithPassword(form)
     setLoading(false)
-    if (error) {
-      push(error.message, 'error')
-    } else {
-      push('Bienvenido de vuelta')
-      router.push('/dashboard')
-      router.refresh()
+    if (error || !data.user) {
+      push(error?.message || 'Error', 'error')
+      return
     }
+    push('Bienvenido de vuelta')
+
+    // Redirigir según tipo de cuenta
+    if (data.user.user_metadata?.role === 'admin') {
+      router.push('/admin')
+    } else {
+      // Detectar si es técnico o cliente buscando en BD
+      const { data: tec } = await supabase.from('tecnicos').select('id').eq('user_id', data.user.id).maybeSingle()
+      router.push(tec ? '/dashboard' : '/mi-cuenta')
+    }
+    router.refresh()
   }
 
   async function loginGoogle() {

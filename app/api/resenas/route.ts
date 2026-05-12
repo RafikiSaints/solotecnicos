@@ -9,6 +9,7 @@ const schema = z.object({
   tecnico_id: z.string().uuid(),
   autor_nombre: z.string().min(2),
   autor_email: z.string().email().optional().nullable(),
+  autor_user_id: z.string().uuid().optional().nullable(),
   titulo: z.string().optional().nullable(),
   comentario: z.string().min(30),
   rating_atencion: dim, rating_calidad: dim, rating_respuesta: dim,
@@ -21,7 +22,13 @@ export async function POST(req: Request) {
     if (body._h) return NextResponse.json({ ok: true })
     const parsed = schema.parse(body)
     const sb = createServiceClient()
-    const { error } = await sb.from('resenas').insert({ ...parsed, aprobada: false })
+    // Si viene con user_id, la marcamos como "verificada" automáticamente
+    const verificado = !!parsed.autor_user_id
+    const { error } = await sb.from('resenas').insert({
+      ...parsed,
+      autor_verificado: verificado,
+      aprobada: false, // siempre pasa por moderación admin
+    })
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
     // Email al técnico avisando + email al admin para moderar

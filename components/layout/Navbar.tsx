@@ -16,9 +16,12 @@ const LINKS = [
   { href: '/blog', label: 'Blog' },
 ]
 
+type UserType = 'tecnico' | 'cliente' | 'admin' | null
+
 export function Navbar() {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState<SbUser | null>(null)
+  const [tipo, setTipo] = useState<UserType>(null)
   const [slug, setSlug] = useState<string | null>(null)
   const [menuUser, setMenuUser] = useState(false)
   const router = useRouter()
@@ -27,19 +30,31 @@ export function Navbar() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-      if (user) cargarTecnicoSlug(user.id)
+      if (user) cargarInfoUsuario(user)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null)
-      if (session?.user) cargarTecnicoSlug(session.user.id)
-      else setSlug(null)
+      if (session?.user) cargarInfoUsuario(session.user)
+      else { setSlug(null); setTipo(null) }
     })
     return () => sub.subscription.unsubscribe()
   }, [])
 
-  async function cargarTecnicoSlug(userId: string) {
-    const { data } = await supabase.from('tecnicos').select('slug').eq('user_id', userId).maybeSingle()
-    setSlug(data?.slug || null)
+  async function cargarInfoUsuario(u: SbUser) {
+    // 1. ¿Es admin?
+    if (u.user_metadata?.role === 'admin') {
+      setTipo('admin')
+      return
+    }
+    // 2. ¿Es técnico? (tiene perfil en tecnicos)
+    const { data: tec } = await supabase.from('tecnicos').select('slug').eq('user_id', u.id).maybeSingle()
+    if (tec) {
+      setTipo('tecnico')
+      setSlug(tec.slug)
+      return
+    }
+    // 3. Es cliente (tiene perfil en clientes o solo está en auth con rol cliente)
+    setTipo('cliente')
   }
 
   async function cerrarSesion() {
@@ -66,11 +81,27 @@ export function Navbar() {
         <div className="hidden lg:flex items-center gap-2 relative">
           {user ? (
             <>
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm">
-                  <LayoutDashboard size={14} /> Mi dashboard
-                </Button>
-              </Link>
+              {tipo === 'tecnico' && (
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="sm">
+                    <LayoutDashboard size={14} /> Mi dashboard
+                  </Button>
+                </Link>
+              )}
+              {tipo === 'cliente' && (
+                <Link href="/mi-cuenta">
+                  <Button variant="ghost" size="sm">
+                    <LayoutDashboard size={14} /> Mi cuenta
+                  </Button>
+                </Link>
+              )}
+              {tipo === 'admin' && (
+                <Link href="/admin">
+                  <Button variant="ghost" size="sm">
+                    <LayoutDashboard size={14} /> Admin
+                  </Button>
+                </Link>
+              )}
               <button
                 onClick={() => setMenuUser(m => !m)}
                 className="h-9 w-9 rounded-full bg-azul text-white flex items-center justify-center font-semibold text-sm hover:bg-azul-mid"
@@ -80,7 +111,7 @@ export function Navbar() {
               {menuUser && (
                 <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-borde rounded-lg shadow-card py-1 z-50">
                   <div className="px-3 py-2 border-b border-borde text-xs text-gris-3 truncate">{user.email}</div>
-                  {slug && (
+                  {tipo === 'tecnico' && slug && (
                     <Link
                       href={`/tecnico/${slug}`}
                       onClick={() => setMenuUser(false)}
@@ -89,16 +120,27 @@ export function Navbar() {
                       <ExternalLink size={14} /> Ver mi perfil público
                     </Link>
                   )}
-                  <Link
-                    href="/dashboard/perfil"
-                    onClick={() => setMenuUser(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-gris-4 hover:bg-papel"
-                  >
-                    <User size={14} /> Editar perfil
-                  </Link>
+                  {tipo === 'tecnico' && (
+                    <Link href="/dashboard/perfil" onClick={() => setMenuUser(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gris-4 hover:bg-papel">
+                      <User size={14} /> Editar perfil
+                    </Link>
+                  )}
+                  {tipo === 'cliente' && (
+                    <>
+                      <Link href="/mi-cuenta/cotizaciones" onClick={() => setMenuUser(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gris-4 hover:bg-papel">
+                        📩 Mis cotizaciones
+                      </Link>
+                      <Link href="/mi-cuenta/resenas" onClick={() => setMenuUser(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gris-4 hover:bg-papel">
+                        ⭐ Mis reseñas
+                      </Link>
+                      <Link href="/mi-cuenta/perfil" onClick={() => setMenuUser(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-gris-4 hover:bg-papel">
+                        <User size={14} /> Editar perfil
+                      </Link>
+                    </>
+                  )}
                   <button
                     onClick={cerrarSesion}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-rojo hover:bg-rojo/5 w-full text-left"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-rojo hover:bg-rojo/5 w-full text-left border-t border-borde"
                   >
                     <LogOut size={14} /> Cerrar sesión
                   </button>
@@ -154,6 +196,9 @@ export function Navbar() {
                 <>
                   <Link href="/login" onClick={() => setOpen(false)}>
                     <Button variant="outline" size="sm" className="w-full">Iniciar sesión</Button>
+                  </Link>
+                  <Link href="/registro-cliente" onClick={() => setOpen(false)}>
+                    <Button variant="outline" size="sm" className="w-full">Crear cuenta cliente</Button>
                   </Link>
                   <Link href="/registro-tecnico" onClick={() => setOpen(false)}>
                     <Button size="sm" className="w-full">Soy técnico</Button>

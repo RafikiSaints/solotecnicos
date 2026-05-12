@@ -1,11 +1,13 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 import { StarRating, RatingDisplay } from '@/components/ui/StarRating'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { useToast } from '@/components/ui/Toast'
 import { tiempoTranscurrido } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import { ShieldCheck, ChevronDown, ChevronUp, Star } from 'lucide-react'
 import type { Resena } from '@/types/database.types'
 
@@ -157,7 +159,22 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
   const [comentario, setComentario] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [ok, setOk] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const push = useToast(s => s.push)
+  const supabase = createClient()
+
+  // Detectar usuario logueado y auto-llenar
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      setUser(user)
+      const { data: cliente } = await supabase.from('clientes').select('nombre').eq('user_id', user.id).maybeSingle()
+      setAutor({
+        nombre: cliente?.nombre || user.user_metadata?.nombre || '',
+        email: user.email || '',
+      })
+    })
+  }, [])
 
   // Promedio en tiempo real para modo detallado
   const promedio = useMemo(() => {
@@ -200,6 +217,7 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
         tecnico_id: tecnicoId,
         autor_nombre: autor.nombre,
         autor_email: autor.email || null,
+        autor_user_id: user?.id || null,
         titulo: titulo || null,
         comentario,
         ...ratingsFinal,
