@@ -53,8 +53,13 @@ export function DetalleCotizacion({ cotizacion: initial, verFotos, puedeWhatsapp
     if (nuevoEstado === 'vista' && !cotizacion.leida_en) {
       patch.leida_en = new Date().toISOString()
     }
-    const { data } = await supabase.from('cotizaciones').update(patch).eq('id', cotizacion.id).select().single()
+    const { data, error } = await supabase.from('cotizaciones').update(patch).eq('id', cotizacion.id).select().single()
     setCambiandoEstado(false)
+    if (error) {
+      console.error('Error cambiando estado:', error)
+      push(`Error: ${error.message}`, 'error')
+      return
+    }
     if (data) {
       setCotizacion(data)
       onUpdate?.(data)
@@ -64,8 +69,13 @@ export function DetalleCotizacion({ cotizacion: initial, verFotos, puedeWhatsapp
 
   async function guardarNotas() {
     setGuardandoNotas(true)
-    await supabase.from('cotizaciones').update({ notas_internas: notas }).eq('id', cotizacion.id)
+    const { error } = await supabase.from('cotizaciones').update({ notas_internas: notas }).eq('id', cotizacion.id)
     setGuardandoNotas(false)
+    if (error) {
+      console.error('Error guardando notas:', error)
+      push(`Error: ${error.message}`, 'error')
+      return
+    }
     push('Notas guardadas')
   }
 
