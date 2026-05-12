@@ -180,6 +180,10 @@ export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
             onSave={guardarCambios}
             onCancel={() => setEditando(null)}
             onToggleActivo={() => toggleActivo(editando.id, editando.activo)}
+            onUserUpdated={(newUserId) => {
+              setTecnicos(tecnicos.map(t => t.id === editando.id ? { ...t, user_id: newUserId } : t))
+              setEditando({ ...editando, user_id: newUserId })
+            }}
           />
         )}
       </Modal>
@@ -187,7 +191,13 @@ export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
   )
 }
 
-function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo }: { tecnico: TecnicoAdmin; onSave: (u: any) => void; onCancel: () => void; onToggleActivo: () => void }) {
+function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo, onUserUpdated }: {
+  tecnico: TecnicoAdmin
+  onSave: (u: any) => void
+  onCancel: () => void
+  onToggleActivo: () => void
+  onUserUpdated: (newUserId: string | null) => void
+}) {
   const [form, setForm] = useState({
     plan: tecnico.plan,
     plan_vence_en: tecnico.plan_vence_en?.slice(0, 10) || '',
@@ -195,6 +205,9 @@ function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo }: { tecn
     destacado: tecnico.destacado,
     activo: tecnico.activo,
   })
+  const [emailVincular, setEmailVincular] = useState('')
+  const [vinculando, setVinculando] = useState(false)
+  const push = useToast(s => s.push)
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -205,6 +218,45 @@ function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo }: { tecn
       destacado: form.destacado,
       activo: form.activo,
     })
+  }
+
+  async function vincular() {
+    if (!emailVincular.trim()) return
+    if (!confirm(`¿Vincular usuario ${emailVincular} al técnico "${tecnico.nombre_empresa}"?\n\nEsto convierte al usuario en técnico. Si la cuenta no existe se creará automáticamente y se enviará email de bienvenida.`)) return
+    setVinculando(true)
+    const res = await fetch('/api/admin/vincular-usuario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tecnico_id: tecnico.id, email: emailVincular }),
+    })
+    setVinculando(false)
+    if (res.ok) {
+      const { user_id } = await res.json()
+      onUserUpdated(user_id)
+      setEmailVincular('')
+      push('Usuario vinculado correctamente')
+    } else {
+      const err = await res.json().catch(() => ({}))
+      push(err.error || 'Error al vincular', 'error')
+    }
+  }
+
+  async function desvincular() {
+    if (!confirm(`¿Desvincular usuario de "${tecnico.nombre_empresa}"? El técnico quedará como "huérfano" y otro usuario podrá reclamarlo.`)) return
+    setVinculando(true)
+    const res = await fetch('/api/admin/vincular-usuario', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tecnico_id: tecnico.id }),
+    })
+    setVinculando(false)
+    if (res.ok) {
+      onUserUpdated(null)
+      push('Usuario desvinculado')
+    } else {
+      const err = await res.json().catch(() => ({}))
+      push(err.error || 'Error', 'error')
+    }
   }
 
   return (
@@ -237,6 +289,48 @@ function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo }: { tecn
           <input type="checkbox" checked={form.activo} onChange={e => setForm({ ...form, activo: e.target.checked })} />
           <span className="text-sm">🟢 Cuenta activa (visible al público)</span>
         </label>
+      </div>
+
+      {/* SECCIÓN PROPIETARIO */}
+      <div className="rounded-md border-2 border-azul-mid/20 bg-azul-mid/5 p-3 space-y-3">
+        <h4 className="font-display text-sm text-azul font-bold flex items-center gap-2">
+          👤 Propietario del perfil
+        </h4>
+
+        {tecnico.user_id ? (
+          <>
+            <div className="text-sm text-gris-4">
+              <Badge tone="verde">✓ Vinculado</Badge>
+              <div className="text-xs mt-1">User ID: <span className="font-mono text-[10px]">{tecnico.user_id}</span></div>
+              <div className="text-xs">El propietario puede iniciar sesión y editar este perfil.</div>
+            </div>
+            <Button type="button" variant="ghost" size="sm" onClick={desvincular} loading={vinculando} className="!text-rojo hover:!bg-rojo/5">
+              Desvincular propietario
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="text-sm text-gris-4">
+              <Badge tone="oro">🪪 Sin propietario</Badge>
+              <div className="text-xs mt-1">Vincula a un usuario existente (ej: cliente registrado que quiere ser técnico) o crea cuenta nueva con email.</div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={emailVincular}
+                onChange={e => setEmailVincular(e.target.value)}
+                placeholder="email@ejemplo.cl"
+                className="input-st flex-1 text-sm"
+              />
+              <Button type="button" size="sm" onClick={vincular} loading={vinculando}>
+                Vincular
+              </Button>
+            </div>
+            <p className="text-[11px] text-gris-3">
+              Si el email no existe en el sistema, se creará una cuenta nueva y se enviará email de bienvenida automáticamente.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="rounded-md bg-papel p-3 text-xs text-gris-4">

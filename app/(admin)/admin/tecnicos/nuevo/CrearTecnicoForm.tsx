@@ -26,6 +26,7 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
     categoria_ids: [] as number[],
     etiquetas: [] as string[],
     comunas_cobertura: [] as string[],
+    email_propietario: '', // opcional: vincula a usuario existente o crea cuenta nueva
   })
 
   function toggleCategoria(id: number) {
@@ -68,8 +69,26 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
     for (const catId of form.categoria_ids) {
       await supabase.from('tecnico_categorias').insert({ tecnico_id: tecnico.id, categoria_id: catId })
     }
+
+    // Si dio email del propietario, vincular cuenta
+    if (form.email_propietario.trim()) {
+      const vincRes = await fetch('/api/admin/vincular-usuario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tecnico_id: tecnico.id, email: form.email_propietario.trim() }),
+      })
+      if (!vincRes.ok) {
+        const err = await vincRes.json().catch(() => ({}))
+        push(`Técnico creado pero falló vincular usuario: ${err.error}`, 'error')
+        router.push('/admin/tecnicos')
+        return
+      }
+      push('Técnico creado y vinculado al usuario ✓')
+    } else {
+      push('Técnico creado — sin propietario, lo podrá reclamar después')
+    }
+
     setLoading(false)
-    push('Técnico creado — ya aparece en el directorio')
     router.push('/admin/tecnicos')
   }
 
@@ -131,6 +150,21 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
           values={form.comunas_cobertura}
           onChange={v => setForm({ ...form, comunas_cobertura: v })}
           placeholder="Las Condes, Vitacura, Providencia..."
+        />
+      </div>
+
+      <div className="card space-y-3">
+        <h3 className="font-display text-lg text-azul font-bold">Propietario de la cuenta (opcional)</h3>
+        <p className="text-xs text-gris-3 -mt-2">
+          Si quieres asignar este perfil a un usuario específico (ej: cliente existente que quiere ser técnico, o crear cuenta nueva), pon su email aquí. Si lo dejas vacío, el perfil queda sin dueño y cualquier técnico podrá reclamarlo después.
+        </p>
+        <Input
+          label="Email del propietario"
+          type="email"
+          value={form.email_propietario}
+          onChange={e => setForm({ ...form, email_propietario: e.target.value })}
+          placeholder="contacto@empresa.cl (opcional)"
+          helper="Si el email no existe, se creará una cuenta nueva automáticamente y se enviará email de bienvenida."
         />
       </div>
 
