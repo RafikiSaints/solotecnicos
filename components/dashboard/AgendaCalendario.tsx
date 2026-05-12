@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X, Phone } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Phone, MessageCircle, Mail } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -219,33 +219,63 @@ export function AgendaCalendario({ citas: ini, tecnico }: { citas: Cita[]; tecni
             <p className="text-sm text-gris-3 text-center py-4">Sin citas este día</p>
           ) : (
             <div className="space-y-2">
-              {citasDiaSeleccionado.map(c => (
-                <div key={c.id} className="border border-borde rounded-md p-3">
-                  <div className="flex justify-between items-start mb-1">
-                    <div>
-                      <strong className="text-azul">{c.cliente_nombre}</strong>
-                      <span className="text-xs text-gris-3 ml-2">{c.hora_inicio.slice(0, 5)}{c.hora_fin ? ` – ${c.hora_fin.slice(0, 5)}` : ''}</span>
+              {citasDiaSeleccionado.map(c => {
+                // Mensaje de recordatorio con detalles de la cita
+                const fecha = new Date(c.fecha + 'T' + c.hora_inicio)
+                const fechaTxt = fecha.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
+                const horaTxt = c.hora_inicio.slice(0, 5) + (c.hora_fin ? ` – ${c.hora_fin.slice(0, 5)}` : '')
+                const mensaje = `Hola ${c.cliente_nombre}, te confirmo nuestra cita:\n\n📅 ${fechaTxt}\n🕒 ${horaTxt}\n${c.descripcion ? `\n📋 ${c.descripcion}\n` : ''}\nSaludos,\n${tecnico.nombre_empresa}`
+                const waLink = c.cliente_telefono
+                  ? `https://wa.me/${c.cliente_telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`
+                  : null
+                const emailSubject = `Recordatorio de cita — ${tecnico.nombre_empresa}`
+                const emailLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(mensaje)}`
+
+                return (
+                  <div key={c.id} className="border border-borde rounded-md p-3">
+                    <div className="flex justify-between items-start mb-1">
+                      <div>
+                        <strong className="text-azul">{c.cliente_nombre}</strong>
+                        <span className="text-xs text-gris-3 ml-2">{horaTxt}</span>
+                      </div>
+                      <Badge tone={c.estado === 'completada' ? 'verde' : c.estado === 'cancelada' ? 'gris' : 'azul'}>{c.estado}</Badge>
                     </div>
-                    <Badge tone={c.estado === 'completada' ? 'verde' : c.estado === 'cancelada' ? 'gris' : 'azul'}>{c.estado}</Badge>
-                  </div>
-                  {c.cliente_telefono && (
-                    <a href={`tel:${c.cliente_telefono}`} className="text-xs text-azul-mid hover:underline inline-flex items-center gap-1">
-                      <Phone size={11} /> {c.cliente_telefono}
-                    </a>
-                  )}
-                  {c.descripcion && <p className="text-sm text-gris-4 mt-1">{c.descripcion}</p>}
-                  {c.notas && <p className="text-xs text-gris-3 mt-1 italic">📝 {c.notas}</p>}
-                  <div className="flex gap-3 mt-2 text-xs">
-                    {c.estado === 'confirmada' && (
-                      <>
-                        <button onClick={() => cambiarEstadoCita(c.id, 'completada')} className="text-verde font-medium hover:underline">✓ Completada</button>
-                        <button onClick={() => cambiarEstadoCita(c.id, 'cancelada')} className="text-rojo font-medium hover:underline">✗ Cancelar</button>
-                      </>
+                    {c.cliente_telefono && (
+                      <a href={`tel:${c.cliente_telefono}`} className="text-xs text-azul-mid hover:underline inline-flex items-center gap-1">
+                        <Phone size={11} /> {c.cliente_telefono}
+                      </a>
                     )}
-                    <button onClick={() => eliminarCita(c.id)} className="text-gris-3 hover:text-rojo ml-auto">Eliminar</button>
+                    {c.descripcion && <p className="text-sm text-gris-4 mt-1">{c.descripcion}</p>}
+                    {c.notas && <p className="text-xs text-gris-3 mt-1 italic">📝 {c.notas}</p>}
+
+                    {/* Botones de envío al cliente */}
+                    {(waLink || c.cliente_telefono) && (
+                      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-borde">
+                        <span className="text-xs text-gris-3 font-semibold">Enviar recordatorio:</span>
+                        {waLink && (
+                          <a href={waLink} target="_blank" rel="noopener noreferrer" className="text-xs text-verde font-semibold hover:underline inline-flex items-center gap-1">
+                            <MessageCircle size={12} /> WhatsApp
+                          </a>
+                        )}
+                        <a href={emailLink} className="text-xs text-azul-mid font-semibold hover:underline inline-flex items-center gap-1">
+                          <Mail size={12} /> Email
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Acciones de estado */}
+                    <div className="flex gap-3 mt-2 text-xs">
+                      {c.estado === 'confirmada' && (
+                        <>
+                          <button onClick={() => cambiarEstadoCita(c.id, 'completada')} className="text-verde font-medium hover:underline">✓ Completada</button>
+                          <button onClick={() => cambiarEstadoCita(c.id, 'cancelada')} className="text-rojo font-medium hover:underline">✗ Cancelar</button>
+                        </>
+                      )}
+                      <button onClick={() => eliminarCita(c.id)} className="text-gris-3 hover:text-rojo ml-auto">Eliminar</button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
