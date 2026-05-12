@@ -12,7 +12,8 @@ export async function POST(req: Request) {
     }
     const { url } = await crearOrdenPago({
       tecnicoId, email, plan, tipo,
-      urlRetorno: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/plan?ok=1`,
+      // Apunta a nuestro endpoint que verifica + activa + redirige a dashboard
+      urlRetorno: `${process.env.NEXT_PUBLIC_APP_URL}/api/flow/return`,
     })
     return NextResponse.json({ url })
   } catch (e: any) {
