@@ -16,7 +16,8 @@ export default async function MensajesPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-azul mb-4">Mensajes</h1>
+      <h1 className="font-display text-3xl text-azul mb-1 font-bold">Cotizaciones</h1>
+      <p className="text-sm text-gris-3 mb-4">Solicitudes de clientes — contacta por teléfono, WhatsApp o email y registra el estado.</p>
       <BandejaMensajes tecnico={tecnico} cotizaciones={cotizaciones || []} />
     </div>
   )

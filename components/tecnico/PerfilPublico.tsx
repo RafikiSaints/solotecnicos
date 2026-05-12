@@ -70,7 +70,7 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
                   </span>
                 ))}
               </div>
-              <h1 className="font-display text-3xl md:text-5xl font-bold leading-tight">{tecnico.nombre_empresa}</h1>
+              <h1 className="font-display text-3xl md:text-5xl font-bold leading-tight !text-white">{tecnico.nombre_empresa}</h1>
               <div className="flex flex-wrap gap-3 text-sm text-white/80">
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin size={14} />

@@ -27,7 +27,7 @@ const ITEMS: Item[] = [
   { href: '/dashboard',                 label: 'Resumen',         icon: BarChart3 },
   { href: '/dashboard/perfil',          label: 'Mi perfil',       icon: User },
   { href: '/dashboard/fotos',           label: 'Fotos y portafolio', icon: Camera },
-  { href: '/dashboard/mensajes',        label: 'Mensajes',        icon: MessageSquare, badge: 'mensajes' },
+  { href: '/dashboard/mensajes',        label: 'Cotizaciones',    icon: MessageSquare, badge: 'mensajes' },
   { href: '/dashboard/resenas',         label: 'Reseñas',         icon: Star },
   { href: '/dashboard/agenda',          label: 'Agenda',          icon: Calendar, lockFeature: 'agenda' },
   { href: '/dashboard/estadisticas',    label: 'Estadísticas',    icon: LineChart, lockFeature: 'estadisticas' },

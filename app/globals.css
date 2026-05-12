@@ -33,6 +33,12 @@
     letter-spacing: -0.02em;
     font-weight: 700;
   }
+  /* En contenedores con texto blanco (heros, dashboards oscuros), los headings también blancos */
+  .text-white h1, .text-white h2, .text-white h3, .text-white h4, .text-white h5, .text-white h6,
+  [class*="bg-azul"] h1, [class*="bg-azul"] h2, [class*="bg-azul"] h3, [class*="bg-azul"] h4,
+  [class*="bg-azul"] h5, [class*="bg-azul"] h6 {
+    color: white;
+  }
   ::selection {
     background: var(--azul-mid);
     color: white;

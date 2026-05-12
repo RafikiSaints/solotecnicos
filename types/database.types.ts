@@ -4,7 +4,7 @@
 export type PlanTipo = 'gratis' | 'pro' | 'elite'
 export type PagoEstado = 'activo' | 'vencido' | 'cancelado' | 'pendiente' | 'gracia'
 export type PagoTipo = 'mensual' | 'anual' | 'unico'
-export type CotizacionEstado = 'pendiente' | 'vista' | 'respondida' | 'cerrada'
+export type CotizacionEstado = 'pendiente' | 'vista' | 'respondida' | 'contactada' | 'cerrada'
 export type MensajeEstado = 'no_leido' | 'leido'
 export type UrgenciaTipo = 'normal' | 'urgente' | '24h'
 export type CertEstado = 'pendiente' | 'aprobada' | 'rechazada'
@@ -182,6 +182,7 @@ export interface Cotizacion {
   estado: CotizacionEstado
   respuesta: string | null
   precio_cotizado: number | null
+  notas_internas: string | null
   leida_en: string | null
   respondida_en: string | null
   created_at: string
