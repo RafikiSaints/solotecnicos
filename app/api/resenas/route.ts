@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/server'
+import { enviarEmail, FROM_EMAIL } from '@/lib/resend'
+import ResenaRecibida from '@/emails/ResenaRecibida'
 
 const dim = z.number().min(1).max(5)
 const schema = z.object({
@@ -21,6 +23,49 @@ export async function POST(req: Request) {
     const sb = createServiceClient()
     const { error } = await sb.from('resenas').insert({ ...parsed, aprobada: false })
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+    // Email al técnico avisando + email al admin para moderar
+    try {
+      const { data: tec } = await sb.from('tecnicos')
+        .select('email_publico, nombre_empresa, slug')
+        .eq('id', parsed.tecnico_id).single()
+
+      const promedio = (
+        parsed.rating_atencion + parsed.rating_calidad + parsed.rating_respuesta +
+        parsed.rating_resolucion + parsed.rating_rapidez + parsed.rating_precio +
+        parsed.rating_garantia
+      ) / 7
+
+      if (tec?.email_publico) {
+        await enviarEmail({
+          to: tec.email_publico,
+          subject: `Nueva reseña de ${parsed.autor_nombre}`,
+          react: ResenaRecibida({
+            tecnicoNombre: tec.nombre_empresa,
+            autor: parsed.autor_nombre,
+            rating: promedio,
+            comentario: parsed.comentario,
+          }),
+        })
+      }
+
+      // Email al admin para moderar (a la dirección de envío configurada)
+      if (FROM_EMAIL && tec) {
+        await enviarEmail({
+          to: FROM_EMAIL,
+          subject: `[Moderación] Nueva reseña pendiente — ${tec.nombre_empresa}`,
+          react: ResenaRecibida({
+            tecnicoNombre: `Admin (técnico: ${tec.nombre_empresa})`,
+            autor: parsed.autor_nombre,
+            rating: promedio,
+            comentario: parsed.comentario,
+          }),
+        })
+      }
+    } catch (e) {
+      console.warn('Email reseña falló:', e)
+    }
+
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/server'
+import { enviarEmail } from '@/lib/resend'
+import Bienvenida from '@/emails/Bienvenida'
 
 const schema = z.object({
   user_id: z.string().uuid(),
@@ -13,8 +15,7 @@ const schema = z.object({
 
 /**
  * Crea el perfil de técnico desde el servidor (service_role salta RLS).
- * Se llama justo después del signUp para asegurar que el perfil se crea
- * aunque la sesión aún no esté activa (caso email confirmation = on).
+ * Envía email de bienvenida tras crear el perfil.
  */
 export async function POST(req: Request) {
   try {
@@ -36,6 +37,19 @@ export async function POST(req: Request) {
     // 3. Asignar categoría
     if (categoria_id && tecnico) {
       await sb.from('tecnico_categorias').insert({ tecnico_id: tecnico.id, categoria_id })
+    }
+
+    // 4. Email de bienvenida (best-effort, no falla si email falla)
+    if (parsed.email_publico) {
+      try {
+        await enviarEmail({
+          to: parsed.email_publico,
+          subject: '¡Bienvenido a SoloTécnicos!',
+          react: Bienvenida({ nombre: parsed.nombre_empresa }),
+        })
+      } catch (emailErr) {
+        console.warn('Email bienvenida falló:', emailErr)
+      }
     }
 
     return NextResponse.json({ ok: true, tecnico_id: tecnico.id })
