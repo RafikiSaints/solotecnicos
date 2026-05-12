@@ -237,6 +237,14 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
               </div>
             </div>
           )}
+          {tecnico.sucursales_texto && (
+            <div className="card">
+              <h4 className="font-display text-lg text-azul mb-2 font-bold flex items-center gap-2">
+                <span className="text-cyan">🏢</span> Puntos de atención
+              </h4>
+              <p className="text-sm text-gris-4 whitespace-pre-wrap">{tecnico.sucursales_texto}</p>
+            </div>
+          )}
           {tecnico.etiquetas && tecnico.etiquetas.length > 0 && (
             <div className="card">
               <h4 className="font-display text-lg text-azul mb-2 font-bold">Especialidades</h4>

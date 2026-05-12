@@ -23,7 +23,7 @@ const FILAS: { label: string; key: string }[] = [
   { label: 'Alertas de demanda',        key: 'alertas_demanda' },
   { label: 'Certificaciones',           key: 'certificaciones' },
   { label: 'Video promocional',         key: 'video' },
-  { label: 'Sucursales',                key: 'sucursales' },
+  { label: 'Puntos de atención múltiples', key: 'puntos_atencion' },
 ]
 
 export function TablaPlanes() {

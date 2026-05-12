@@ -20,7 +20,7 @@ export const PLANES = {
       puede_ver_fotos_cotizacion: false,
       agenda: false,
       video: false,
-      sucursales: 1,
+      puntos_atencion: false,
       certificaciones: false,
       link_personalizado: true,
       alertas_demanda: false,
@@ -45,7 +45,7 @@ export const PLANES = {
       puede_ver_fotos_cotizacion: true,
       agenda: true,
       video: true,
-      sucursales: 1,
+      puntos_atencion: true,
       certificaciones: true,
       link_personalizado: true,
       alertas_demanda: true,
@@ -70,7 +70,7 @@ export const PLANES = {
       puede_ver_fotos_cotizacion: true,
       agenda: true,
       video: true,
-      sucursales: 5,
+      puntos_atencion: true,
       certificaciones: true,
       link_personalizado: true,
       alertas_demanda: true,
@@ -98,7 +98,7 @@ export function puedeHacer(
 
 export function limiteNumerico(
   tecnico: Pick<Tecnico, 'plan' | 'plan_vence_en'>,
-  feature: 'fotos' | 'servicios' | 'trabajos_portafolio' | 'sucursales' | 'etiquetas'
+  feature: 'fotos' | 'servicios' | 'trabajos_portafolio' | 'etiquetas'
 ): number {
   const plan = planVigente(tecnico)
   const val = PLANES[plan].limites[feature]

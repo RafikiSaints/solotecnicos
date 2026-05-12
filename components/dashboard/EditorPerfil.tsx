@@ -53,6 +53,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
         sitio_web: form.sitio_web,
         link_google_maps: form.link_google_maps,
         link_google_business: form.link_google_business,
+        sucursales_texto: form.sucursales_texto,
         horarios: form.horarios,
         atiende_24h: form.atiende_24h,
         atiende_domicilio: form.atiende_domicilio,
@@ -170,6 +171,23 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
           placeholder="Escribe y presiona Enter o coma"
           helper="Las comunas que cubres con servicio a domicilio"
         />
+
+        {/* Puntos de atención adicionales (solo PRO/Elite) */}
+        {puedeHacer(tecnico, 'puntos_atencion') ? (
+          <Textarea
+            label="Puntos de atención adicionales (PRO/Elite)"
+            value={form.sucursales_texto || ''}
+            onChange={e => setForm({ ...form, sucursales_texto: e.target.value })}
+            placeholder="Ej: Tenemos sucursales en Las Condes (Av. Apoquindo 1234) y Maipú (Plaza Maipú local 23). También atendemos en domicilio de lunes a sábado."
+            className="min-h-[80px]"
+            helper="Si tienes varias sucursales o puntos de atención, descríbelos aquí. Aparece como bloque en tu perfil público."
+          />
+        ) : (
+          <div className="rounded-md border border-borde p-3 bg-papel/50 text-sm text-gris-3 flex items-center gap-2">
+            <span className="text-oro">🔒</span>
+            <span><strong>Puntos de atención múltiples</strong> — disponible en plan PRO o Elite. Te permite describir tus sucursales adicionales en el perfil público.</span>
+          </div>
+        )}
       </Seccion>
 
       {/* GOOGLE */}
