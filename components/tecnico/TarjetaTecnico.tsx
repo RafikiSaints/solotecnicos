@@ -32,8 +32,8 @@ export function TarjetaTecnico({ tecnico, servicios = [], compact = false }: Tar
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-4 p-4">
-        {/* Foto */}
-        <div className="relative h-28 sm:h-32 rounded-md overflow-hidden bg-papel">
+        {/* Foto clickeable */}
+        <Link href={`/tecnico/${tecnico.slug}`} className="relative h-28 sm:h-32 rounded-md overflow-hidden bg-papel block hover:opacity-90 transition-opacity">
           {tecnico.foto_portada ? (
             <Image
               src={tecnico.foto_portada}
@@ -43,11 +43,11 @@ export function TarjetaTecnico({ tecnico, servicios = [], compact = false }: Tar
               className="object-cover"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-3xl text-gris-3">
+            <div className="absolute inset-0 flex items-center justify-center text-3xl text-gris-3 font-display font-bold">
               {tecnico.nombre_empresa.charAt(0)}
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Info */}
         <div className="flex flex-col">

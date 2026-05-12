@@ -1,14 +1,18 @@
 'use client'
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { useToast } from '@/components/ui/Toast'
 import { LockedOverlay } from '@/components/ui/UpgradePrompt'
+import { InputChips } from './InputChips'
 import { createClient } from '@/lib/supabase/client'
 import { puedeHacer, limiteNumerico } from '@/lib/planes'
 import { DIAS_SEMANA } from '@/lib/utils'
 import type { Tecnico, Region, Categoria, Servicio, Horarios } from '@/types/database.types'
+
+const MapaSelector = dynamic(() => import('./MapaSelector').then(m => m.MapaSelector), { ssr: false })
 
 interface Props {
   tecnico: Tecnico
@@ -39,11 +43,15 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
         region_id: form.region_id,
         comuna: form.comuna,
         direccion: form.direccion,
+        lat: form.lat,
+        lng: form.lng,
         comunas_cobertura: form.comunas_cobertura,
         telefono: form.telefono,
         whatsapp: form.whatsapp,
         email_publico: form.email_publico,
         sitio_web: form.sitio_web,
+        link_google_maps: form.link_google_maps,
+        link_google_business: form.link_google_business,
         horarios: form.horarios,
         atiende_24h: form.atiende_24h,
         atiende_domicilio: form.atiende_domicilio,
@@ -53,6 +61,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
       else push('Error al guardar', 'error')
     }, 1500)
     return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form])
 
   function actualizarHorario(dia: keyof Horarios, campo: 'abre' | 'cierra' | 'abierto', valor: any) {
@@ -123,6 +132,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
               value={form.whatsapp || ''}
               onChange={e => setForm({ ...form, whatsapp: e.target.value })}
               disabled={!whatsappPermitido}
+              placeholder="+56912345678"
             />
             {!whatsappPermitido && <LockedOverlay feature="WhatsApp visible solo en plan PRO" />}
           </div>
@@ -132,7 +142,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
       </Seccion>
 
       {/* UBICACIÓN */}
-      <Seccion titulo="Ubicación">
+      <Seccion titulo="Ubicación del local">
         <div className="grid sm:grid-cols-2 gap-4">
           <Select label="Región" value={form.region_id || ''} onChange={e => setForm({ ...form, region_id: Number(e.target.value) })}>
             <option value="">Selecciona...</option>
@@ -140,12 +150,41 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
           </Select>
           <Input label="Comuna" value={form.comuna || ''} onChange={e => setForm({ ...form, comuna: e.target.value })} />
         </div>
-        <Input label="Dirección" value={form.direccion || ''} onChange={e => setForm({ ...form, direccion: e.target.value })} />
-        <Textarea
-          label="Comunas de cobertura (separadas por coma)"
-          value={(form.comunas_cobertura || []).join(', ')}
-          onChange={e => setForm({ ...form, comunas_cobertura: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-          placeholder="Las Condes, Vitacura, Providencia"
+        <Input label="Dirección" value={form.direccion || ''} onChange={e => setForm({ ...form, direccion: e.target.value })} placeholder="Av. Apoquindo 1234, Las Condes" />
+
+        <div>
+          <label className="label-st">Ubicación en el mapa</label>
+          <MapaSelector
+            lat={form.lat}
+            lng={form.lng}
+            onChange={(lat, lng) => setForm({ ...form, lat, lng })}
+          />
+        </div>
+
+        <InputChips
+          label="Comunas de cobertura"
+          values={form.comunas_cobertura || []}
+          onChange={v => setForm({ ...form, comunas_cobertura: v })}
+          placeholder="Escribe y presiona Enter o coma"
+          helper="Las comunas que cubres con servicio a domicilio"
+        />
+      </Seccion>
+
+      {/* GOOGLE */}
+      <Seccion titulo="Integraciones Google (opcional, recomendado)">
+        <Input
+          label="Link Google Maps"
+          value={form.link_google_maps || ''}
+          onChange={e => setForm({ ...form, link_google_maps: e.target.value })}
+          placeholder="https://maps.app.goo.gl/..."
+          helper="Pega el link compartible de tu local en Google Maps. Aparecerá un botón en tu perfil."
+        />
+        <Input
+          label="Link Google My Business"
+          value={form.link_google_business || ''}
+          onChange={e => setForm({ ...form, link_google_business: e.target.value })}
+          placeholder="https://g.co/kgs/..."
+          helper="Tu perfil de empresa en Google. Aumenta la confianza de los clientes."
         />
       </Seccion>
 
@@ -157,7 +196,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
               key={c.id}
               type="button"
               onClick={() => toggleCategoria(c.id)}
-              className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${cats.includes(c.id) ? 'border-azul bg-azul text-white' : 'border-borde bg-white text-gris-4 hover:border-azul'}`}
+              className={`px-3 py-1.5 rounded-full text-sm border-2 transition-colors ${cats.includes(c.id) ? 'border-azul-mid bg-azul-mid text-white' : 'border-borde bg-white text-gris-4 hover:border-azul-mid'}`}
             >
               {c.icono} {c.nombre}
             </button>
@@ -167,6 +206,9 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
 
       {/* SERVICIOS */}
       <Seccion titulo={`Servicios (${svcs.length}/${limiteSvc === 9999 ? '∞' : limiteSvc})`}>
+        <p className="text-xs text-gris-3 -mt-2 mb-2">
+          Si no tienes precio fijo, déjalo vacío y aparecerá un botón "Cotizar" en tu perfil.
+        </p>
         <div className="space-y-2">
           {svcs.map((s, i) => (
             <ServicioRow
@@ -217,7 +259,7 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <details className="card" open>
-      <summary className="cursor-pointer font-display text-xl text-azul mb-3 select-none">{titulo}</summary>
+      <summary className="cursor-pointer font-display text-xl text-azul mb-3 select-none font-bold">{titulo}</summary>
       <div className="space-y-4 pt-3">{children}</div>
     </details>
   )
@@ -228,7 +270,12 @@ function ServicioRow({ servicio, onChange, onDelete }: { servicio: Servicio; onC
     <div className="grid grid-cols-[1fr_1fr_120px_40px] gap-2 items-start">
       <Input value={servicio.nombre} onChange={e => onChange({ ...servicio, nombre: e.target.value })} placeholder="Nombre" />
       <Input value={servicio.descripcion || ''} onChange={e => onChange({ ...servicio, descripcion: e.target.value })} placeholder="Descripción" />
-      <Input type="number" value={servicio.precio_desde || ''} onChange={e => onChange({ ...servicio, precio_desde: e.target.value ? Number(e.target.value) : null })} placeholder="Precio CLP" />
+      <Input
+        type="number"
+        value={servicio.precio_desde || ''}
+        onChange={e => onChange({ ...servicio, precio_desde: e.target.value ? Number(e.target.value) : null })}
+        placeholder="Vacío = cotizar"
+      />
       <Button variant="ghost" size="sm" onClick={onDelete}>×</Button>
     </div>
   )

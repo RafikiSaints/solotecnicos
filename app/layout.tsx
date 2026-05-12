@@ -1,28 +1,27 @@
 import type { Metadata } from 'next'
-import { Fraunces, Instrument_Sans } from 'next/font/google'
+import { Plus_Jakarta_Sans, Inter } from 'next/font/google'
 import './globals.css'
 
-const fraunces = Fraunces({
+const display = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['300', '400', '700', '900'],
-  style: ['normal', 'italic'],
-  variable: '--font-fraunces',
+  weight: ['400', '600', '700', '800'],
+  variable: '--font-display',
   display: 'swap',
 })
-const instrument = Instrument_Sans({
+const body = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-instrument',
+  variable: '--font-body',
   display: 'swap',
 })
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://solotecnicos.cl'),
   title: {
-    default: 'SoloTécnicos — Directorio de servicios técnicos en Chile',
+    default: 'SoloTécnicos — Encuentra al mejor técnico cerca tuyo',
     template: '%s | SoloTécnicos',
   },
-  description: 'El directorio más completo de técnicos verificados en Chile: climatización, computación, electricidad, gasfitería y más.',
+  description: 'Directorio de técnicos verificados en Chile. Reseñas reales, comparador y cotizaciones gratis.',
   openGraph: {
     type: 'website',
     locale: 'es_CL',
@@ -33,7 +32,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${fraunces.variable} ${instrument.variable}`}>
+    <html lang="es" className={`${display.variable} ${body.variable}`}>
       <body>{children}</body>
     </html>
   )

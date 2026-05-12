@@ -3,34 +3,39 @@
 @tailwind utilities;
 
 :root {
-  --azul: #0D2444;
-  --azul-mid: #163660;
-  --azul-soft: #1E4A82;
-  --rojo: #C8102E;
-  --rojo-hover: #A50D25;
-  --blanco: #FAFAF8;
-  --papel: #F2F1EE;
-  --borde: #D8D5CE;
-  --gris-3: #8A877F;
-  --gris-4: #4A4840;
-  --oro: #C89A2E;
-  --verde: #1A7A4A;
+  --azul: #1E3A8A;
+  --azul-mid: #2563EB;
+  --azul-soft: #3B82F6;
+  --rojo: #EF4444;
+  --rojo-hover: #DC2626;
+  --coral: #F97316;
+  --blanco: #FFFFFF;
+  --papel: #F8FAFC;
+  --borde: #E2E8F0;
+  --gris-3: #64748B;
+  --gris-4: #334155;
+  --oro: #F59E0B;
+  --verde: #10B981;
+  --cyan: #06B6D4;
+  --purpura: #8B5CF6;
 }
 
 @layer base {
   html, body {
     background: var(--blanco);
     color: var(--gris-4);
-    font-family: var(--font-instrument), system-ui, sans-serif;
+    font-family: var(--font-body), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-fraunces), Georgia, serif;
+    font-family: var(--font-display), system-ui, sans-serif;
     color: var(--azul);
+    letter-spacing: -0.02em;
+    font-weight: 700;
   }
   ::selection {
-    background: var(--azul);
-    color: var(--blanco);
+    background: var(--azul-mid);
+    color: white;
   }
 }
 
@@ -39,52 +44,60 @@
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 font-semibold text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-rojo text-white hover:bg-rojo-hover shadow-sm;
+    @apply btn bg-rojo text-white hover:bg-rojo-hover shadow-sm hover:shadow-md;
   }
   .btn-secondary {
-    @apply btn bg-azul text-white hover:bg-azul-mid;
+    @apply btn bg-azul text-white hover:bg-azul-mid shadow-sm;
   }
   .btn-outline {
-    @apply btn border border-borde bg-white text-azul hover:border-azul hover:bg-papel;
+    @apply btn border-2 border-borde bg-white text-azul hover:border-azul-mid hover:bg-papel;
   }
   .btn-ghost {
     @apply btn text-gris-4 hover:bg-papel hover:text-azul;
   }
   .card {
-    @apply bg-white border border-borde rounded-lg p-5;
+    @apply bg-white border border-borde rounded-lg p-5 shadow-soft;
   }
   .input-st {
-    @apply w-full rounded-md border border-borde bg-white px-3.5 py-2.5 text-sm text-azul placeholder-gris-3 transition-colors focus:outline-none focus:border-azul focus:ring-2 focus:ring-azul/10;
+    @apply w-full rounded-md border-2 border-borde bg-white px-3.5 py-2.5 text-sm text-gris-4 placeholder-gris-3 transition-colors focus:outline-none focus:border-azul-mid focus:ring-4 focus:ring-azul-mid/10;
   }
   .label-st {
-    @apply block text-sm font-medium text-azul mb-1.5;
-  }
-  .hero-clip {
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 48px), 0 100%);
+    @apply block text-sm font-semibold text-gris-4 mb-1.5;
   }
   .badge {
-    @apply inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded;
+    @apply inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full;
   }
-  .badge-verde { @apply badge bg-verde/10 text-verde; }
-  .badge-oro   { @apply badge bg-oro/10 text-oro; }
-  .badge-azul  { @apply badge bg-azul/10 text-azul; }
-  .badge-rojo  { @apply badge bg-rojo/10 text-rojo; }
+  .badge-verde { @apply badge bg-verde/12 text-verde; }
+  .badge-oro   { @apply badge bg-oro/15 text-oro; }
+  .badge-azul  { @apply badge bg-azul-mid/12 text-azul-mid; }
+  .badge-rojo  { @apply badge bg-rojo/12 text-rojo; }
+  .badge-cyan  { @apply badge bg-cyan/12 text-cyan; }
+  .badge-purpura { @apply badge bg-purpura/12 text-purpura; }
   .badge-gris  { @apply badge bg-papel text-gris-4 border border-borde; }
+
+  .hero-clip {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 32px), 0 100%);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
-/* Leaflet overrides */
 .leaflet-container {
-  font-family: var(--font-instrument), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
   background: var(--papel);
 }
 .leaflet-popup-content-wrapper {
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
-/* Star rating */
 .star-rating { display: inline-flex; gap: 2px; }
 .star-rating button {
   background: none; border: none; cursor: pointer; padding: 2px;
@@ -92,11 +105,18 @@
 }
 .star-rating button:hover { transform: scale(1.15); }
 
-/* Number decorativo (Fraunces) */
 .num-deco {
-  font-family: var(--font-fraunces), Georgia, serif;
-  font-weight: 900;
-  font-style: italic;
-  color: var(--azul);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 800;
+  color: var(--azul-mid);
   line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
 }

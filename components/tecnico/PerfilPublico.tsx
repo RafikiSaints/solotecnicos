@@ -136,15 +136,22 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
               <div className="grid sm:grid-cols-2 gap-3">
                 {servicios.map(s => (
                   <div key={s.id} className="card">
-                    <div className="flex justify-between items-start gap-2">
-                      <div>
-                        <h4 className="font-medium text-azul">{s.nombre}</h4>
+                    <div className="flex justify-between items-start gap-2 mb-2">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-azul">{s.nombre}</h4>
                         {s.descripcion && <p className="text-sm text-gris-4 mt-1">{s.descripcion}</p>}
                       </div>
-                      <span className="text-sm font-semibold text-rojo whitespace-nowrap">
-                        {s.precio_desde ? `desde ${clpFormat(s.precio_desde)}` : 'A cotizar'}
-                      </span>
                     </div>
+                    {s.precio_desde ? (
+                      <div className="text-sm">
+                        <span className="text-xs text-gris-3">desde</span>{' '}
+                        <span className="font-bold text-azul-mid text-base">{clpFormat(s.precio_desde)}</span>
+                      </div>
+                    ) : (
+                      <a href="#cotizar" className="inline-flex items-center gap-1 text-sm font-semibold text-rojo hover:text-rojo-hover">
+                        💬 Solicitar cotización →
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>
@@ -179,7 +186,20 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
           <div>
             <h2 className="font-display text-2xl text-azul mb-1">Reseñas verificadas</h2>
             <p className="text-sm text-gris-3 mb-4">Evaluación en 7 dimensiones por nuestros usuarios</p>
-            <SistemaResenas tecnicoId={tecnico.id} resenas={resenas} />
+            <SistemaResenas
+              tecnicoId={tecnico.id}
+              resenas={resenas}
+              ratingsTecnico={{
+                rating_promedio: tecnico.rating_promedio,
+                rating_atencion: tecnico.rating_atencion,
+                rating_calidad: tecnico.rating_calidad,
+                rating_respuesta: tecnico.rating_respuesta,
+                rating_resolucion: tecnico.rating_resolucion,
+                rating_rapidez: tecnico.rating_rapidez,
+                rating_precio: tecnico.rating_precio,
+                rating_garantia: tecnico.rating_garantia,
+              }}
+            />
           </div>
         </div>
 

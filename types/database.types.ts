@@ -60,6 +60,8 @@ export interface Tecnico {
   email_publico: string | null
   sitio_web: string | null
   link_personalizado: string | null
+  link_google_maps: string | null
+  link_google_business: string | null
   plan: PlanTipo
   plan_vence_en: string | null
   verificado: boolean

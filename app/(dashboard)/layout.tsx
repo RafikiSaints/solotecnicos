@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SidebarDashboard } from '@/components/dashboard/SidebarDashboard'
+import { HeaderDashboard } from '@/components/dashboard/HeaderDashboard'
 import { ToastContainer } from '@/components/ui/Toast'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +20,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex bg-papel min-h-screen">
       <SidebarDashboard tecnico={tecnico} mensajesNoLeidos={noLeidos || 0} />
-      <main className="flex-1 p-4 lg:p-8 overflow-x-auto">{children}</main>
+      <main className="flex-1 p-4 lg:p-8 overflow-x-auto">
+        <HeaderDashboard slug={tecnico.slug} email={user.email || ''} />
+        {children}
+      </main>
       <ToastContainer />
     </div>
   )

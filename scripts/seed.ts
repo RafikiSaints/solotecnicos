@@ -126,16 +126,59 @@ async function main() {
     }
   }
 
-  // 4. Servicios
+  // 4. Servicios (algunos con precio, otros sin precio = botón cotizar)
   console.log('\n💼 Creando servicios...')
-  for (const t of tecnicosCreados.slice(0, 3)) {
+  for (const t of tecnicosCreados.slice(0, 4)) {
     await sb.from('tecnico_servicios').insert([
       { tecnico_id: t.id, nombre: 'Diagnóstico inicial', precio_desde: 15000, orden: 0 },
       { tecnico_id: t.id, nombre: 'Reparación estándar', precio_desde: 35000, orden: 1 },
       { tecnico_id: t.id, nombre: 'Mantención preventiva', precio_desde: 25000, orden: 2 },
+      { tecnico_id: t.id, nombre: 'Instalación a medida', descripcion: 'Cotización personalizada según el trabajo', precio_desde: null, orden: 3 },
     ])
   }
   console.log('   ✓ servicios creados')
+
+  // 4b. Fotos (URLs externas de Unsplash, no requieren bucket)
+  console.log('\n📷 Agregando fotos a técnicos...')
+  const fotosPool: Record<number, string[]> = {
+    0: [ // ClimaTech Pro
+      'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800',
+      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800',
+      'https://images.unsplash.com/photo-1581094271901-8022df4466f9?w=800',
+    ],
+    1: [ // TecnoFix
+      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800',
+      'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800',
+      'https://images.unsplash.com/photo-1547082299-de196ea013d6?w=800',
+    ],
+    2: [ // CellRepair
+      'https://images.unsplash.com/photo-1592434134753-a70baf7979d5?w=800',
+      'https://images.unsplash.com/photo-1601972602288-3be527b4f18a?w=800',
+    ],
+    3: [ // Electricidad
+      'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=800',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',
+    ],
+    4: [ // Gasfitería
+      'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=800',
+    ],
+    5: [ // TecnoServicio
+      'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800',
+    ],
+  }
+  for (let i = 0; i < tecnicosCreados.length; i++) {
+    const fotos = fotosPool[i]
+    if (!fotos) continue
+    for (let j = 0; j < fotos.length; j++) {
+      await sb.from('tecnico_fotos').insert({
+        tecnico_id: tecnicosCreados[i].id,
+        url: fotos[j],
+        es_portada: j === 0,
+        orden: j,
+      })
+    }
+  }
+  console.log('   ✓ fotos creadas')
 
   // 5. Reseñas
   console.log('\n⭐ Creando reseñas...')
