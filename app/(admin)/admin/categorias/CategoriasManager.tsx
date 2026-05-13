@@ -45,9 +45,21 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
       nombre: c.nombre,
       icono: c.icono,
       descripcion: c.descripcion,
+      destacada: (c as any).destacada,
     }).eq('id', c.id)
     if (error) push(`Error: ${error.message}`, 'error')
     else push('Actualizada')
+  }
+
+  async function toggleDestacada(c: Categoria) {
+    const nueva = !(c as any).destacada
+    const { error } = await supabase.from('categorias').update({ destacada: nueva }).eq('id', c.id)
+    if (error) {
+      push(`Error: ${error.message}`, 'error')
+      return
+    }
+    setItems(items.map(x => x.id === c.id ? ({ ...x, destacada: nueva } as any) : x))
+    push(nueva ? `"${c.nombre}" destacada en home` : `"${c.nombre}" quitada del home`)
   }
 
   async function eliminar(id: number, nombre: string) {
@@ -119,6 +131,9 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
 
       {/* Lista */}
       <div className="card overflow-x-auto">
+        <p className="text-xs text-gris-3 mb-2">
+          💡 Marca como <strong>"Destacada"</strong> las categorías que aparecen en la home. El resto se ven en <code>/categorias</code> y al buscar.
+        </p>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-gris-3 uppercase border-b border-borde">
@@ -126,6 +141,7 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
               <th className="pb-2">Nombre</th>
               <th className="pb-2">Slug</th>
               <th className="pb-2">Orden</th>
+              <th className="pb-2">Destacada</th>
               <th className="pb-2"></th>
             </tr>
           </thead>
@@ -153,6 +169,13 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
                     </td>
                     <td className="text-xs text-gris-3">{c.slug}</td>
                     <td>{c.orden}</td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={(c as any).destacada || false}
+                        onChange={e => setItems(items.map(x => x.id === c.id ? { ...x, destacada: e.target.checked } as any : x))}
+                      />
+                    </td>
                     <td className="flex gap-1 py-2">
                       <button onClick={() => { actualizar(c); setEditando(null) }} className="text-verde p-1 hover:bg-verde/10 rounded"><Check size={14} /></button>
                       <button onClick={() => setEditando(null)} className="text-gris-3 p-1 hover:bg-papel rounded"><X size={14} /></button>
@@ -164,6 +187,14 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
                     <td className="font-medium text-azul">{c.nombre}</td>
                     <td className="text-xs text-gris-3">{c.slug}</td>
                     <td className="text-xs text-gris-3">{c.orden}</td>
+                    <td>
+                      <button
+                        onClick={() => toggleDestacada(c)}
+                        className={`text-xs px-2 py-0.5 rounded-full font-semibold transition-colors ${(c as any).destacada ? 'bg-oro/15 text-oro hover:bg-oro/25' : 'bg-papel text-gris-3 hover:bg-borde'}`}
+                      >
+                        {(c as any).destacada ? '⭐ Sí' : '○ No'}
+                      </button>
+                    </td>
                     <td className="flex gap-1 py-2">
                       <button onClick={() => setEditando(c.id)} className="text-azul-mid p-1 hover:bg-azul-mid/10 rounded"><Edit3 size={14} /></button>
                       <button onClick={() => eliminar(c.id, c.nombre)} className="text-rojo p-1 hover:bg-rojo/10 rounded"><Trash2 size={14} /></button>

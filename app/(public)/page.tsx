@@ -33,10 +33,20 @@ async function tecnicosTop(sb: any, regionId?: number, limit = 8) {
 export default async function HomePage() {
   const sb = createClient()
 
-  const [{ data: categorias }, { data: regiones }] = await Promise.all([
-    sb.from('categorias').select('*').order('orden'),
+  const [{ data: catDestacadas }, totalCatRes, { data: regiones }] = await Promise.all([
+    sb.from('categorias').select('*').eq('destacada', true).order('orden').limit(15),
+    sb.from('categorias').select('id', { count: 'exact', head: true }),
     sb.from('regiones').select('*').order('orden'),
   ])
+
+  // Fallback: si nadie marcó destacadas, mostrar primeras 10
+  let categorias = catDestacadas
+  if (!categorias || categorias.length === 0) {
+    const { data: fallback } = await sb.from('categorias').select('*').order('orden').limit(10)
+    categorias = fallback
+  }
+  const totalCategorias = totalCatRes.count || 0
+  const hayMasCategorias = totalCategorias > (categorias?.length || 0)
 
   const regionSlug = getRegionCookie()
   const regionSel: Region | undefined = regionSlug ? regiones?.find(r => r.slug === regionSlug) : undefined
@@ -116,13 +126,18 @@ export default async function HomePage() {
         </svg>
       </section>
 
-      {/* CATEGORÍAS */}
+      {/* CATEGORÍAS DESTACADAS */}
       <section className="container-st py-16">
         <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
           <div>
             <h2 className="font-display text-3xl md:text-4xl text-azul font-extrabold">¿Qué necesitas reparar?</h2>
-            <p className="text-gris-4 mt-1">15 especialidades técnicas</p>
+            <p className="text-gris-4 mt-1">Las especialidades más buscadas</p>
           </div>
+          {hayMasCategorias && (
+            <Link href="/categorias">
+              <Button variant="outline" size="sm">Ver todas ({totalCategorias}) →</Button>
+            </Link>
+          )}
         </div>
         <FiltroCategorias categorias={categorias || []} />
       </section>

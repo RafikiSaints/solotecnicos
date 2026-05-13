@@ -38,6 +38,7 @@ export interface Categoria {
   icono: string | null
   descripcion: string | null
   orden: number
+  destacada?: boolean
 }
 
 export interface Tecnico {
