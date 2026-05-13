@@ -84,8 +84,17 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
     push('Categoría eliminada')
   }
 
-  // Sugerencias de iconos por especialidad
-  const ICONOS_SUGERIDOS = ['🎮', '🔧', '⚡', '💻', '📱', '❄️', '🚿', '📺', '🧊', '🧺', '🔒', '🖨️', '⚙️', '🔥', '📷', '📡', '🚗', '🛠️', '🏠', '🔌']
+  // Sugerencias de iconos organizadas por tipo de oficio
+  const GRUPOS_ICONOS: { titulo: string; iconos: string[] }[] = [
+    { titulo: 'Electrónica y tecnología', iconos: ['💻', '🖥️', '📱', '⌚', '📺', '🎮', '🕹️', '🖨️', '⌨️', '🖱️', '💾', '💿', '📷', '📹', '🎧', '🔋', '🔌', '📡', '📶', '🛰️'] },
+    { titulo: 'Hogar y electrodomésticos', iconos: ['🏠', '🚪', '🛋️', '🛏️', '🚿', '🚽', '🛁', '🧺', '🧹', '🧽', '🪟', '🧊', '❄️', '🔥', '💡', '🔦', '🪑', '🪞', '🚰', '🍳'] },
+    { titulo: 'Herramientas y construcción', iconos: ['🔧', '🔨', '🪚', '🪛', '⚙️', '⛏️', '🪓', '🧱', '🪵', '📐', '📏', '🧰', '🔩', '⛓️', '🪜', '🛠️', '🚧', '🦺', '🔗', '🪒'] },
+    { titulo: 'Vehículos y transporte', iconos: ['🚗', '🚙', '🚕', '🚐', '🚚', '🚛', '🚜', '🏍️', '🚲', '🛵', '🛴', '🛹', '⛽', '🚏', '🛞', '🛟', '🚧', '🛣️', '🅿️', '🏁'] },
+    { titulo: 'Seguridad y emergencia', iconos: ['🔒', '🔐', '🗝️', '🔑', '🛡️', '⚠️', '🚨', '🆘', '🔔', '🚪', '👮', '🚓', '🚒', '🧯', '🦺', '👁️', '📹', '🔭', '🚷', '⛔'] },
+    { titulo: 'Naturaleza y exterior', iconos: ['🌿', '🌱', '🌳', '🌲', '🌴', '🌵', '🌾', '🌻', '🌷', '🍀', '🌍', '🌊', '☀️', '🌧️', '⛅', '🔥', '💧', '⛺', '🏕️', '🌄'] },
+    { titulo: 'Servicios y otros', iconos: ['🧹', '🧺', '🧽', '🧴', '🧻', '🪣', '🛒', '📦', '🚚', '🏥', '💉', '💊', '🐕', '🐈', '✂️', '💈', '🎨', '🎭', '🎤', '📚'] },
+    { titulo: 'Símbolos útiles', iconos: ['⭐', '✨', '💎', '🏆', '🥇', '✅', '❤️', '🔆', '💯', '🆕', '🆗', '🆙', '📍', '🗺️', '📌', '🎯', '💰', '💳', '🏷️', '📋'] },
+  ]
 
   return (
     <div className="space-y-4">
@@ -106,20 +115,40 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
 
           <div>
             <label className="label-st">Icono (emoji)</label>
-            <Input value={form.icono} onChange={e => setForm({ ...form, icono: e.target.value })} placeholder="🎮" maxLength={2} className="!w-16 text-center text-xl" />
-            <p className="text-xs text-gris-3 mt-1">Click en uno de estos o pega cualquier emoji:</p>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {ICONOS_SUGERIDOS.map(emoji => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => setForm({ ...form, icono: emoji })}
-                  className={`text-xl p-1 rounded hover:bg-papel ${form.icono === emoji ? 'bg-azul-mid/10' : ''}`}
-                >
-                  {emoji}
-                </button>
-              ))}
+            <div className="flex items-center gap-3">
+              <Input value={form.icono} onChange={e => setForm({ ...form, icono: e.target.value })} placeholder="🎮" maxLength={4} className="!w-20 text-center text-2xl" />
+              <span className="text-xs text-gris-3">
+                <strong>Tip:</strong> presiona <kbd className="px-1.5 py-0.5 bg-papel rounded text-[10px] border border-borde">Win + .</kbd> (Windows) o <kbd className="px-1.5 py-0.5 bg-papel rounded text-[10px] border border-borde">Cmd + Ctrl + Espacio</kbd> (Mac) para abrir el selector de emojis del sistema.
+              </span>
             </div>
+
+            <details className="mt-3 rounded-md border border-borde">
+              <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-azul hover:bg-papel">
+                🎨 Ver emojis sugeridos por categoría
+              </summary>
+              <div className="p-3 space-y-3 max-h-72 overflow-y-auto bg-papel/30">
+                {GRUPOS_ICONOS.map(grupo => (
+                  <div key={grupo.titulo}>
+                    <div className="text-[10px] font-bold text-gris-3 uppercase tracking-wide mb-1">
+                      {grupo.titulo}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {grupo.iconos.map(emoji => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => setForm({ ...form, icono: emoji })}
+                          className={`text-2xl p-1.5 rounded hover:bg-azul-mid/10 transition-colors ${form.icono === emoji ? 'bg-azul-mid/15 ring-2 ring-azul-mid' : ''}`}
+                          title={emoji}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
           </div>
 
           <Input label="Descripción (opcional)" value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} placeholder="Breve descripción de la categoría" />
