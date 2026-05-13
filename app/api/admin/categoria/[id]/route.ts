@@ -3,13 +3,11 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 /**
  * PATCH /api/admin/categoria/[id]
- * Actualiza una categoría desde el servidor con service_role.
- * Esto BYPASS el schema cache del cliente JS de Supabase
- * (útil después de agregar columnas nuevas).
+ * Usa funciones SQL con nombres nuevos (cat_set_destacada, cat_update_full)
+ * para evitar el schema cache de PostgREST que se queda pegado tras agregar columnas.
  */
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
-    // Verificar admin
     const sb = createClient()
     const { data: { user } } = await sb.auth.getUser()
     if (!user || user.user_metadata?.role !== 'admin') {
@@ -17,35 +15,40 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     const body = await req.json()
-    // Sanitizar: solo permitir ciertos campos
-    const updates: any = {}
-    if (typeof body.nombre === 'string') updates.nombre = body.nombre
-    if (typeof body.icono === 'string') updates.icono = body.icono
-    if (typeof body.descripcion === 'string') updates.descripcion = body.descripcion
-    if (typeof body.destacada === 'boolean') updates.destacada = body.destacada
-    if (typeof body.orden === 'number') updates.orden = body.orden
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: 'Sin cambios' }, { status: 400 })
-    }
+    const id = parseInt(params.id)
+    if (!id) return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
 
     const svc = createServiceClient()
-    // Usamos función SQL que bypasea el schema cache de PostgREST
-    const { data, error } = await svc.rpc('admin_update_categoria', {
-      p_id: parseInt(params.id),
-      p_nombre: updates.nombre ?? null,
-      p_icono: updates.icono ?? null,
-      p_descripcion: updates.descripcion ?? null,
-      p_destacada: updates.destacada ?? null,
-      p_orden: updates.orden ?? null,
+
+    // CASO 1: solo cambio de destacada → usar función específica más rápida
+    const soloDestacada = Object.keys(body).length === 1 && typeof body.destacada === 'boolean'
+    if (soloDestacada) {
+      const { error } = await svc.rpc('cat_set_destacada', {
+        p_id: id,
+        p_value: body.destacada,
+      })
+      if (error) {
+        console.error('[cat_set_destacada]', error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+      return NextResponse.json({ ok: true, destacada: body.destacada })
+    }
+
+    // CASO 2: cambios múltiples → función completa
+    const { error } = await svc.rpc('cat_update_full', {
+      p_id: id,
+      p_nombre: typeof body.nombre === 'string' ? body.nombre : null,
+      p_icono: typeof body.icono === 'string' ? body.icono : null,
+      p_descripcion: typeof body.descripcion === 'string' ? body.descripcion : null,
+      p_destacada: typeof body.destacada === 'boolean' ? body.destacada : null,
     })
 
     if (error) {
-      console.error('[admin/categoria] rpc error:', error)
+      console.error('[cat_update_full]', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, categoria: data })
+    return NextResponse.json({ ok: true })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
