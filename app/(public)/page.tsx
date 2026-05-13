@@ -7,6 +7,7 @@ import { FiltroCategorias } from '@/components/directorio/FiltroCategorias'
 import { TarjetaTecnico } from '@/components/tecnico/TarjetaTecnico'
 import { SeccionEmergencias } from '@/components/directorio/SeccionEmergencias'
 import { InvitarTecnico } from '@/components/directorio/InvitarTecnico'
+import { TabsRegionDestacados } from '@/components/directorio/TabsRegionDestacados'
 import { Button } from '@/components/ui/Button'
 import { getRegionCookie } from '@/lib/region'
 import type { TecnicoConRelaciones, Region } from '@/types/database.types'
@@ -59,8 +60,8 @@ export default async function HomePage() {
   if (regionSel) {
     destacadosDeRegion = await tecnicosTop(sb, regionSel.id, 8)
   } else {
-    // Top regiones a destacar
-    const slugsTop = ['metropolitana', 'valparaiso', 'biobio']
+    // Cargar las 5-6 regiones más relevantes (las que tengan técnicos)
+    const slugsTop = ['metropolitana', 'valparaiso', 'biobio', 'araucania', 'los-lagos', 'maule']
     for (const slug of slugsTop) {
       const r = regiones?.find(x => x.slug === slug)
       if (!r) continue
@@ -175,28 +176,8 @@ export default async function HomePage() {
           )}
         </section>
       ) : (
-        // Sin región → secciones por región popular
-        porRegion.map(({ region, tecnicos }) => (
-          <section key={region.id} className="container-st py-12">
-            <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
-              <div>
-                <h2 className="font-display text-2xl md:text-3xl text-azul font-extrabold flex items-center gap-2">
-                  <MapPin size={24} className="text-azul-mid" />
-                  Top técnicos en {region.nombre}
-                </h2>
-                <p className="text-gris-4 text-sm mt-1">{tecnicos.length} mejor{tecnicos.length !== 1 ? 'es' : ''} calificado{tecnicos.length !== 1 ? 's' : ''}</p>
-              </div>
-              <Link href={`/region/${region.slug}`}>
-                <Button variant="outline" size="sm">Ver más →</Button>
-              </Link>
-            </div>
-            <div className="grid md:grid-cols-2 gap-5">
-              {tecnicos.map(t => (
-                <TarjetaTecnico key={t.id} tecnico={t} />
-              ))}
-            </div>
-          </section>
-        ))
+        // Sin región → tabs con mejores de cada región
+        <TabsRegionDestacados data={porRegion} />
       )}
 
       {/* CÓMO FUNCIONA */}
