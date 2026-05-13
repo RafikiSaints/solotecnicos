@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
+import { sql } from '@/lib/pg'
 
 /**
  * PATCH /api/admin/categoria/[id]
- * Usa funciones SQL con nombres nuevos (cat_set_destacada, cat_update_full)
- * para evitar el schema cache de PostgREST que se queda pegado tras agregar columnas.
+ * Conexión directa a Postgres (NO usa PostgREST → no afectado por schema cache).
  */
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -18,45 +18,37 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const id = parseInt(params.id)
     if (!id) return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
 
-    const svc = createServiceClient()
+    // Sólo permitir ciertos campos
+    const allowed: Record<string, any> = {}
+    if (typeof body.nombre === 'string')      allowed.nombre = body.nombre
+    if (typeof body.icono === 'string')       allowed.icono = body.icono
+    if (typeof body.descripcion === 'string') allowed.descripcion = body.descripcion
+    if (typeof body.destacada === 'boolean')  allowed.destacada = body.destacada
+    if (typeof body.orden === 'number')       allowed.orden = body.orden
 
-    // CASO 1: solo cambio de destacada → usar función específica más rápida
-    const soloDestacada = Object.keys(body).length === 1 && typeof body.destacada === 'boolean'
-    if (soloDestacada) {
-      const { error } = await svc.rpc('cat_set_destacada', {
-        p_id: id,
-        p_value: body.destacada,
-      })
-      if (error) {
-        console.error('[cat_set_destacada]', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
-      }
-      return NextResponse.json({ ok: true, destacada: body.destacada })
+    if (Object.keys(allowed).length === 0) {
+      return NextResponse.json({ error: 'Sin cambios' }, { status: 400 })
     }
 
-    // CASO 2: cambios múltiples → función completa
-    const { error } = await svc.rpc('cat_update_full', {
-      p_id: id,
-      p_nombre: typeof body.nombre === 'string' ? body.nombre : null,
-      p_icono: typeof body.icono === 'string' ? body.icono : null,
-      p_descripcion: typeof body.descripcion === 'string' ? body.descripcion : null,
-      p_destacada: typeof body.destacada === 'boolean' ? body.destacada : null,
-    })
+    // SQL directo. La librería postgres-js arma el UPDATE seguro (sin SQL injection)
+    const result = await sql`
+      UPDATE categorias
+      SET ${sql(allowed)}
+      WHERE id = ${id}
+      RETURNING *
+    `
 
-    if (error) {
-      console.error('[cat_update_full]', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (result.length === 0) {
+      return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 })
     }
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, categoria: result[0] })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    console.error('[admin/categoria patch]', e)
+    return NextResponse.json({ error: e.message || 'Error' }, { status: 500 })
   }
 }
 
-/**
- * DELETE /api/admin/categoria/[id]
- */
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
     const sb = createClient()
@@ -65,11 +57,13 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const svc = createServiceClient()
-    const { error } = await svc.from('categorias').delete().eq('id', params.id)
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    const id = parseInt(params.id)
+    if (!id) return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
+
+    await sql`DELETE FROM categorias WHERE id = ${id}`
     return NextResponse.json({ ok: true })
   } catch (e: any) {
+    console.error('[admin/categoria delete]', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
