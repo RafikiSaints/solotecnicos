@@ -30,14 +30,18 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     const svc = createServiceClient()
-    const { data, error } = await svc.from('categorias')
-      .update(updates)
-      .eq('id', params.id)
-      .select()
-      .single()
+    // Usamos función SQL que bypasea el schema cache de PostgREST
+    const { data, error } = await svc.rpc('admin_update_categoria', {
+      p_id: parseInt(params.id),
+      p_nombre: updates.nombre ?? null,
+      p_icono: updates.icono ?? null,
+      p_descripcion: updates.descripcion ?? null,
+      p_destacada: updates.destacada ?? null,
+      p_orden: updates.orden ?? null,
+    })
 
     if (error) {
-      console.error('[admin/categoria] update error:', error)
+      console.error('[admin/categoria] rpc error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
