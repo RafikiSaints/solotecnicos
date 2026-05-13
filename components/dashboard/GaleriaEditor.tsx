@@ -69,16 +69,52 @@ export function GaleriaEditor({ tecnico, fotosIniciales }: { tecnico: Tecnico; f
     <div className="card space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-display text-xl text-azul">Galería de fotos</h3>
+          <h3 className="font-display text-xl text-azul font-bold">Galería de fotos</h3>
           <p className="text-sm text-gris-3">{fotos.length} / {limite === 9999 ? '∞' : limite} fotos</p>
         </div>
         <label className="cursor-pointer">
-          <input type="file" multiple accept="image/*" className="hidden" onChange={onUpload} disabled={uploading} />
-          <span className="btn-primary inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium">
+          <input type="file" multiple accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onUpload} disabled={uploading} />
+          <span className="btn-primary inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold">
             <Upload size={14} /> {uploading ? 'Subiendo...' : 'Subir fotos'}
           </span>
         </label>
       </div>
+
+      {/* Tips de fotos */}
+      <details className="rounded-md bg-azul-mid/5 border border-azul-mid/20 text-sm" open={fotos.length === 0}>
+        <summary className="cursor-pointer px-3 py-2 font-semibold text-azul flex items-center gap-2">
+          📐 ¿Cómo deben ser las fotos? <span className="text-xs text-gris-3 ml-auto font-normal">click para ver</span>
+        </summary>
+        <div className="px-3 pb-3 text-xs text-gris-4 space-y-2">
+          <div className="grid sm:grid-cols-2 gap-3 mt-2">
+            <div>
+              <strong className="text-azul">📐 Dimensiones:</strong>
+              <ul className="list-disc pl-4 space-y-0.5 mt-1">
+                <li><strong>Ideal:</strong> 1200 × 1200 px (cuadrado)</li>
+                <li><strong>Mínimo:</strong> 800 × 800 px</li>
+                <li><strong>Aspecto:</strong> 1:1 (cuadrado) — así se muestran en el grid</li>
+              </ul>
+            </div>
+            <div>
+              <strong className="text-azul">📦 Formato y peso:</strong>
+              <ul className="list-disc pl-4 space-y-0.5 mt-1">
+                <li><strong>Formatos:</strong> JPG, PNG, WebP</li>
+                <li><strong>Peso máximo:</strong> 5 MB por foto</li>
+                <li>Si la foto pesa mucho, usa <a href="https://tinypng.com" target="_blank" rel="noopener noreferrer" className="text-azul-mid hover:underline">tinypng.com</a> para comprimirla</li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-2 pt-2 border-t border-azul-mid/10">
+            <strong className="text-azul">✨ Tips para fotos que conviertan:</strong>
+            <ul className="list-disc pl-4 space-y-0.5 mt-1">
+              <li>Buena iluminación (natural si es posible)</li>
+              <li>Sin watermarks ni texto encima</li>
+              <li>Foto de trabajos terminados mejor que foto del local vacío</li>
+              <li>La primera foto se usa como portada — elige la mejor</li>
+            </ul>
+          </div>
+        </div>
+      </details>
 
       {fotos.length === 0 ? (
         <div className="border-2 border-dashed border-borde rounded-lg p-10 text-center text-gris-3">

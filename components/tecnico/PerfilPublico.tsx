@@ -70,8 +70,14 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
         <div className="absolute inset-0 bg-gradient-to-b from-azul/60 via-azul/70 to-azul" />
         <div className="container-st relative py-14 md:py-20">
           <div className="flex flex-col md:flex-row items-start gap-6">
-            <div className="h-24 w-24 md:h-32 md:w-32 rounded-full bg-papel border-4 border-white shadow-card overflow-hidden flex items-center justify-center text-4xl text-azul font-display font-bold">
-              {portada ? <Image src={portada.url} alt={tecnico.nombre_empresa} width={128} height={128} className="object-cover h-full w-full" /> : tecnico.nombre_empresa.charAt(0)}
+            <div className="h-24 w-24 md:h-32 md:w-32 rounded-full bg-white border-4 border-white shadow-card overflow-hidden flex items-center justify-center text-4xl text-azul font-display font-bold shrink-0">
+              {tecnico.logo_url ? (
+                <Image src={tecnico.logo_url} alt={tecnico.nombre_empresa} width={128} height={128} className="object-cover h-full w-full" />
+              ) : portada ? (
+                <Image src={portada.url} alt={tecnico.nombre_empresa} width={128} height={128} className="object-cover h-full w-full" />
+              ) : (
+                tecnico.nombre_empresa.charAt(0)
+              )}
             </div>
             <div className="flex-1 text-white space-y-3">
               <div className="flex flex-wrap gap-1.5">

@@ -65,6 +65,8 @@ export interface Tecnico {
   etiquetas: string[] | null
   sucursales_texto: string | null
   video_url: string | null
+  logo_url: string | null
+  logo_storage_path: string | null
   plan: PlanTipo
   plan_vence_en: string | null
   verificado: boolean

@@ -59,6 +59,35 @@ export function PortafolioEditor({ tecnico, trabajosIniciales }: { tecnico: Tecn
         <Button size="sm" onClick={agregar}><Plus size={14} /> Agregar trabajo</Button>
       </div>
 
+      {/* Tips dimensiones */}
+      <details className="rounded-md bg-azul-mid/5 border border-azul-mid/20 text-sm">
+        <summary className="cursor-pointer px-3 py-2 font-semibold text-azul flex items-center gap-2">
+          📐 Dimensiones recomendadas <span className="text-xs text-gris-3 ml-auto font-normal">click para ver</span>
+        </summary>
+        <div className="px-3 pb-3 text-xs text-gris-4 grid sm:grid-cols-2 gap-3 mt-2">
+          <div>
+            <strong className="text-azul">📐 Cada foto (antes y después):</strong>
+            <ul className="list-disc pl-4 space-y-0.5 mt-1">
+              <li><strong>Ideal:</strong> 1600 × 900 px (16:9 horizontal)</li>
+              <li><strong>Mínimo:</strong> 1280 × 720 px</li>
+              <li><strong>Aspecto:</strong> 16:9 horizontal (apaisado)</li>
+              <li><strong>Formatos:</strong> JPG, PNG, WebP</li>
+              <li><strong>Peso máx:</strong> 5 MB</li>
+            </ul>
+          </div>
+          <div>
+            <strong className="text-azul">✨ Reglas clave:</strong>
+            <ul className="list-disc pl-4 space-y-0.5 mt-1">
+              <li><strong>Mismo ángulo</strong> en ambas fotos</li>
+              <li><strong>Misma iluminación</strong> (no comparar oscuro vs claro)</li>
+              <li>El <strong>antes</strong> debe mostrar el problema</li>
+              <li>El <strong>después</strong> debe verse limpio y terminado</li>
+              <li>Trípode opcional pero ayuda mucho</li>
+            </ul>
+          </div>
+        </div>
+      </details>
+
       {trabajos.length === 0 && (
         <div className="rounded-md border-2 border-dashed border-azul-mid/30 bg-azul-mid/5 p-4 space-y-3">
           <div className="font-semibold text-azul-mid flex items-center gap-1.5 text-sm">💡 Ejemplo de un buen "antes y después":</div>
