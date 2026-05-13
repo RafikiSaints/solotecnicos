@@ -6,6 +6,7 @@ import { FiltroBusqueda } from '@/components/directorio/FiltroBusqueda'
 import { FiltroCategorias } from '@/components/directorio/FiltroCategorias'
 import { TarjetaTecnico } from '@/components/tecnico/TarjetaTecnico'
 import { SeccionEmergencias } from '@/components/directorio/SeccionEmergencias'
+import { InvitarTecnico } from '@/components/directorio/InvitarTecnico'
 import { Button } from '@/components/ui/Button'
 import { getRegionCookie } from '@/lib/region'
 import type { TecnicoConRelaciones, Region } from '@/types/database.types'
@@ -209,15 +210,21 @@ export default async function HomePage() {
         <SeccionEmergencias />
       </section>
 
-      {/* CTA PARA TÉCNICOS */}
+      {/* INVITAR A OTROS TÉCNICOS / OFICIOS */}
+      <InvitarTecnico />
+
+      {/* CTA PARA TÉCNICOS (registro directo) */}
       <section className="container-st pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-cool p-10 md:p-16 text-center text-white">
           <div className="absolute inset-0 bg-mesh-pattern opacity-50" />
           <div className="relative">
             <Sparkles size={36} className="text-oro-soft mx-auto mb-4" />
-            <h2 className="font-display text-3xl md:text-4xl mb-3 font-extrabold !text-white">¿Eres técnico?</h2>
-            <p className="text-white/90 mb-7 max-w-lg mx-auto text-lg">
-              Únete gratis y recibe cotizaciones de clientes en tu zona. Sin costo, sin compromiso.
+            <h2 className="font-display text-3xl md:text-4xl mb-3 font-extrabold !text-white">¿Te dedicas a algún oficio?</h2>
+            <p className="text-white/90 mb-3 max-w-xl mx-auto text-lg">
+              <strong>Cualquier especialidad</strong>: técnica, manual o de servicio. Pintores, gasfiteres, eléctricos, jardineros, mecánicos, albañiles, técnicos…
+            </p>
+            <p className="text-white/80 mb-7 max-w-lg mx-auto">
+              Únete gratis y recibe cotizaciones de clientes en tu zona. Sin costo ni compromiso.
             </p>
             <Link href="/registro-tecnico">
               <Button size="lg" className="bg-white !text-azul hover:bg-papel">
