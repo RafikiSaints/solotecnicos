@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Share2, MessageCircle, Mail, Copy, Check, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -8,13 +8,16 @@ const MENSAJE_BASE = `Hola! Conozco un sitio donde puedes registrar tu negocio g
 
 Mira si te sirve: `
 
+const URL_FIJA = 'https://solotecnicos.cl/registro-tecnico'
+
 export function InvitarTecnico() {
   const [copiado, setCopiado] = useState(false)
+  const [url, setUrl] = useState(URL_FIJA)
   const push = useToast(s => s.push)
 
-  const url = typeof window !== 'undefined'
-    ? `${window.location.origin}/registro-tecnico`
-    : 'https://solotecnicos.cl/registro-tecnico'
+  useEffect(() => {
+    setUrl(`${window.location.origin}/registro-tecnico`)
+  }, [])
 
   const mensajeCompleto = MENSAJE_BASE + url
 
