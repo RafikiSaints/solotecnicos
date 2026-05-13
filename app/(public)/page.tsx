@@ -7,36 +7,64 @@ import { FiltroCategorias } from '@/components/directorio/FiltroCategorias'
 import { TarjetaTecnico } from '@/components/tecnico/TarjetaTecnico'
 import { SeccionEmergencias } from '@/components/directorio/SeccionEmergencias'
 import { Button } from '@/components/ui/Button'
-import type { TecnicoConRelaciones } from '@/types/database.types'
+import { getRegionCookie } from '@/lib/region'
+import type { TecnicoConRelaciones, Region } from '@/types/database.types'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic' // necesario para que la cookie cambie SSR
+
+async function tecnicosTop(sb: any, regionId?: number, limit = 8) {
+  let query = sb.from('tecnicos')
+    .select('*, regiones(nombre), tecnico_fotos(url, es_portada)')
+    .eq('activo', true)
+  if (regionId) query = query.eq('region_id', regionId)
+  query = query
+    .order('plan', { ascending: false })          // elite > pro > gratis
+    .order('rating_promedio', { ascending: false })
+    .limit(limit)
+  const { data } = await query
+  return (data || []).map((t: any) => ({
+    ...t,
+    region_nombre: t.regiones?.nombre,
+    foto_portada: t.tecnico_fotos?.find((f: any) => f.es_portada)?.url || t.tecnico_fotos?.[0]?.url,
+  })) as TecnicoConRelaciones[]
+}
 
 export default async function HomePage() {
   const sb = createClient()
 
-  const [{ data: categorias }, { data: tecnicosRaw }] = await Promise.all([
+  const [{ data: categorias }, { data: regiones }] = await Promise.all([
     sb.from('categorias').select('*').order('orden'),
-    sb.from('tecnicos')
-      .select(`*, regiones(nombre), tecnico_fotos(url, es_portada)`)
-      .eq('activo', true)
-      .order('rating_promedio', { ascending: false })
-      .limit(8),
+    sb.from('regiones').select('*').order('orden'),
   ])
 
-  const tecnicos: TecnicoConRelaciones[] = (tecnicosRaw || []).map((t: any) => ({
-    ...t,
-    region_nombre: t.regiones?.nombre,
-    foto_portada: t.tecnico_fotos?.find((f: any) => f.es_portada)?.url || t.tecnico_fotos?.[0]?.url,
-  }))
+  const regionSlug = getRegionCookie()
+  const regionSel: Region | undefined = regionSlug ? regiones?.find(r => r.slug === regionSlug) : undefined
+
+  // Si hay región seleccionada → 1 grid grande con esa región
+  // Si no → 3 grids por las regiones más populares (RM, Valpo, Biobío)
+  let destacadosDeRegion: TecnicoConRelaciones[] = []
+  let porRegion: { region: Region; tecnicos: TecnicoConRelaciones[] }[] = []
+
+  if (regionSel) {
+    destacadosDeRegion = await tecnicosTop(sb, regionSel.id, 8)
+  } else {
+    // Top regiones a destacar
+    const slugsTop = ['metropolitana', 'valparaiso', 'biobio']
+    for (const slug of slugsTop) {
+      const r = regiones?.find(x => x.slug === slug)
+      if (!r) continue
+      const techs = await tecnicosTop(sb, r.id, 4)
+      if (techs.length > 0) porRegion.push({ region: r, tecnicos: techs })
+    }
+  }
 
   const stats = await sb.from('tecnicos').select('id', { count: 'exact', head: true }).eq('activo', true)
   const totalTecnicos = stats.count || 0
 
   return (
     <>
-      {/* HERO con imagen + gradiente */}
+      {/* HERO */}
       <section className="relative overflow-hidden bg-azul">
-        {/* Imagen de fondo */}
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2070&auto=format&fit=crop"
@@ -51,13 +79,14 @@ export default async function HomePage() {
 
         <div className="container-st relative py-20 md:py-28">
           <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur text-xs font-semibold mb-5 text-white">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur text-xs font-semibold mb-5 !text-white">
               <ShieldCheck size={14} className="text-cyan" />
-              {totalTecnicos > 0 ? `${totalTecnicos.toLocaleString('es-CL')}+ técnicos verificados en Chile` : 'Técnicos verificados en toda Chile'}
+              {totalTecnicos > 0 ? `${totalTecnicos.toLocaleString('es-CL')}+ técnicos verificados` : 'Técnicos verificados'}
+              {regionSel && <> · en <strong>{regionSel.nombre}</strong></>}
             </span>
-            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] mb-5 text-white tracking-tight">
+            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] mb-5 !text-white tracking-tight">
               Encuentra al técnico<br />
-              <span className="text-gradient" style={{ WebkitTextFillColor: 'transparent', backgroundImage: 'linear-gradient(135deg, #FBBF24 0%, #F97316 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>perfecto</span> para tu reparación.
+              <span style={{ WebkitTextFillColor: 'transparent', backgroundImage: 'linear-gradient(135deg, #FBBF24 0%, #F97316 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>perfecto</span> para tu reparación.
             </h1>
             <p className="text-lg md:text-xl text-white/90 mb-8 max-w-xl">
               Profesionales con reseñas reales en 7 dimensiones. Climatización, computación, electricidad, gasfitería y más.
@@ -81,7 +110,6 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* curva inferior */}
         <svg className="absolute bottom-0 left-0 right-0 w-full text-white" preserveAspectRatio="none" viewBox="0 0 1440 60" fill="currentColor">
           <path d="M0 60L60 50C120 40 240 20 360 15C480 10 600 20 720 25C840 30 960 30 1080 25C1200 20 1320 10 1380 5L1440 0V60H1380C1320 60 1200 60 1080 60C960 60 840 60 720 60C600 60 480 60 360 60C240 60 120 60 60 60H0Z" />
         </svg>
@@ -89,7 +117,7 @@ export default async function HomePage() {
 
       {/* CATEGORÍAS */}
       <section className="container-st py-16">
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
           <div>
             <h2 className="font-display text-3xl md:text-4xl text-azul font-extrabold">¿Qué necesitas reparar?</h2>
             <p className="text-gris-4 mt-1">15 especialidades técnicas</p>
@@ -98,33 +126,62 @@ export default async function HomePage() {
         <FiltroCategorias categorias={categorias || []} />
       </section>
 
-      {/* TÉCNICOS DESTACADOS */}
-      <section className="container-st py-16">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <h2 className="font-display text-3xl md:text-4xl text-azul font-extrabold">Técnicos destacados</h2>
-            <p className="text-gris-4 mt-1">Los mejor calificados de la semana</p>
-          </div>
-          <Link href="/buscar">
-            <Button variant="outline" size="sm">Ver todos →</Button>
-          </Link>
-        </div>
-        {tecnicos.length === 0 ? (
-          <div className="card text-center py-12">
-            <Search size={32} className="text-gris-3 mx-auto mb-3" />
-            <p className="text-gris-4">Aún no hay técnicos registrados. ¡Sé el primero!</p>
-            <Link href="/registro-tecnico" className="inline-block mt-3">
-              <Button size="sm">Registrarme</Button>
+      {/* TÉCNICOS DESTACADOS — según región */}
+      {regionSel ? (
+        // Región seleccionada → 1 grid de esa región
+        <section className="container-st py-16">
+          <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
+            <div>
+              <h2 className="font-display text-3xl md:text-4xl text-azul font-extrabold flex items-center gap-2">
+                <MapPin size={28} className="text-azul-mid" />
+                Destacados en {regionSel.nombre}
+              </h2>
+              <p className="text-gris-4 mt-1">Los técnicos mejor calificados de tu región</p>
+            </div>
+            <Link href={`/region/${regionSel.slug}`}>
+              <Button variant="outline" size="sm">Ver todos en {regionSel.nombre} →</Button>
             </Link>
           </div>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-5">
-            {tecnicos.map(t => (
-              <TarjetaTecnico key={t.id} tecnico={t} />
-            ))}
-          </div>
-        )}
-      </section>
+          {destacadosDeRegion.length === 0 ? (
+            <div className="card text-center py-12">
+              <Search size={32} className="text-gris-3 mx-auto mb-3" />
+              <p className="text-gris-4">Aún no hay técnicos registrados en {regionSel.nombre}.</p>
+              <Link href="/registro-tecnico" className="inline-block mt-3">
+                <Button size="sm">Sé el primero</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-5">
+              {destacadosDeRegion.map(t => (
+                <TarjetaTecnico key={t.id} tecnico={t} />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        // Sin región → secciones por región popular
+        porRegion.map(({ region, tecnicos }) => (
+          <section key={region.id} className="container-st py-12">
+            <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
+              <div>
+                <h2 className="font-display text-2xl md:text-3xl text-azul font-extrabold flex items-center gap-2">
+                  <MapPin size={24} className="text-azul-mid" />
+                  Top técnicos en {region.nombre}
+                </h2>
+                <p className="text-gris-4 text-sm mt-1">{tecnicos.length} mejor{tecnicos.length !== 1 ? 'es' : ''} calificado{tecnicos.length !== 1 ? 's' : ''}</p>
+              </div>
+              <Link href={`/region/${region.slug}`}>
+                <Button variant="outline" size="sm">Ver más →</Button>
+              </Link>
+            </div>
+            <div className="grid md:grid-cols-2 gap-5">
+              {tecnicos.map(t => (
+                <TarjetaTecnico key={t.id} tecnico={t} />
+              ))}
+            </div>
+          </section>
+        ))
+      )}
 
       {/* CÓMO FUNCIONA */}
       <section className="bg-papel py-20">
@@ -158,7 +215,7 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-mesh-pattern opacity-50" />
           <div className="relative">
             <Sparkles size={36} className="text-oro-soft mx-auto mb-4" />
-            <h2 className="font-display text-3xl md:text-4xl mb-3 font-extrabold">¿Eres técnico?</h2>
+            <h2 className="font-display text-3xl md:text-4xl mb-3 font-extrabold !text-white">¿Eres técnico?</h2>
             <p className="text-white/90 mb-7 max-w-lg mx-auto text-lg">
               Únete gratis y recibe cotizaciones de clientes en tu zona. Sin costo, sin compromiso.
             </p>

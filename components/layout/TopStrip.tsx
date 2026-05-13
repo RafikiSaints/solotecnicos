@@ -1,6 +1,13 @@
-import { ShieldCheck, MapPin, Phone } from 'lucide-react'
+import { ShieldCheck, Phone } from 'lucide-react'
+import { createServiceClient } from '@/lib/supabase/server'
+import { getRegionCookie } from '@/lib/region'
+import { RegionSelector } from './RegionSelector'
 
-export function TopStrip() {
+export async function TopStrip() {
+  const sb = createServiceClient()
+  const { data: regiones } = await sb.from('regiones').select('*').order('orden')
+  const regionActual = getRegionCookie()
+
   return (
     <div className="hidden md:block bg-azul text-white/90 text-xs">
       <div className="container-st flex items-center justify-between py-2">
@@ -9,10 +16,7 @@ export function TopStrip() {
             <ShieldCheck size={14} className="text-oro" />
             Técnicos verificados en toda Chile
           </span>
-          <span className="inline-flex items-center gap-1.5">
-            <MapPin size={14} className="text-oro" />
-            16 regiones
-          </span>
+          <RegionSelector regiones={regiones || []} regionActual={regionActual} />
         </div>
         <div className="flex items-center gap-5">
           <a href="/registro-tecnico" className="hover:text-oro transition-colors">¿Eres técnico? Únete gratis</a>

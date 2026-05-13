@@ -22,9 +22,10 @@ export default async function BuscarPage({ searchParams }: { searchParams: Recor
     sb.from('regiones').select('*').order('orden'),
   ])
 
-  // Filtros
+  // Filtros — si no viene región en la URL, usar la cookie del usuario
   const q = searchParams.q
-  const regionSlug = searchParams.region
+  const regionCookie = (await import('@/lib/region')).getRegionCookie()
+  const regionSlug = searchParams.region !== undefined ? searchParams.region : regionCookie
   const categoriaSlug = searchParams.categoria
   const ratingMin = searchParams.rating ? parseFloat(searchParams.rating) : null
   const domicilio = searchParams.domicilio === '1'
