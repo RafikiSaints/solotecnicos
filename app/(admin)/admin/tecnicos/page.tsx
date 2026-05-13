@@ -4,6 +4,9 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { TecnicosTable } from './TecnicosTable'
 import { Button } from '@/components/ui/Button'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function AdminTecnicos() {
   const sb = createServiceClient()
   const { data: tecnicos } = await sb.from('tecnicos')

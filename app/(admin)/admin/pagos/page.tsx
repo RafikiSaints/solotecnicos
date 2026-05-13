@@ -2,6 +2,9 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { PagosTable } from './PagosTable'
 import { precioFormateado, PLANES } from '@/lib/planes'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function AdminPagos() {
   const sb = createServiceClient()
   const { data: suscripciones } = await sb.from('suscripciones')

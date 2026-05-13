@@ -1,6 +1,9 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { UsuariosTable } from './UsuariosTable'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function AdminUsuarios() {
   const svc = createServiceClient()
   const { data } = await svc.auth.admin.listUsers()

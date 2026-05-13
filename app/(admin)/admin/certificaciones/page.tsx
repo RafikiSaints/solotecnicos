@@ -1,6 +1,9 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { CertificacionesModeracion } from './CertificacionesModeracion'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function AdminCertificaciones() {
   const sb = createServiceClient()
   const { data: certs } = await sb.from('tecnico_certificaciones')

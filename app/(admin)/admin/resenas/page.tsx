@@ -1,6 +1,9 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { ResenasModeracion } from './ResenasModeracion'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function AdminResenas() {
   const sb = createServiceClient()
   const { data: resenas } = await sb.from('resenas')
