@@ -41,21 +41,35 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
   }
 
   async function actualizar(c: Categoria) {
-    const { error } = await supabase.from('categorias').update({
-      nombre: c.nombre,
-      icono: c.icono,
-      descripcion: c.descripcion,
-      destacada: (c as any).destacada,
-    }).eq('id', c.id)
-    if (error) push(`Error: ${error.message}`, 'error')
-    else push('Actualizada')
+    // Vía API server (evita schema cache del cliente JS)
+    const res = await fetch(`/api/admin/categoria/${c.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: c.nombre,
+        icono: c.icono || '',
+        descripcion: c.descripcion || '',
+        destacada: (c as any).destacada || false,
+      }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      push(`Error: ${err.error || 'no se pudo guardar'}`, 'error')
+      return
+    }
+    push('Actualizada')
   }
 
   async function toggleDestacada(c: Categoria) {
     const nueva = !(c as any).destacada
-    const { error } = await supabase.from('categorias').update({ destacada: nueva }).eq('id', c.id)
-    if (error) {
-      push(`Error: ${error.message}`, 'error')
+    const res = await fetch(`/api/admin/categoria/${c.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ destacada: nueva }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      push(`Error: ${err.error || 'no se pudo'}`, 'error')
       return
     }
     setItems(items.map(x => x.id === c.id ? ({ ...x, destacada: nueva } as any) : x))
