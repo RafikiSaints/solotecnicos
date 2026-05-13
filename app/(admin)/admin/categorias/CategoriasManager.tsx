@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Plus, Trash2, GripVertical, Edit3, Check, X } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -16,6 +17,7 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
   const [guardando, setGuardando] = useState(false)
   const push = useToast(s => s.push)
   const supabase = createClient()
+  const router = useRouter()
 
   async function crear(e: React.FormEvent) {
     e.preventDefault()
@@ -72,8 +74,18 @@ export function CategoriasManager({ iniciales }: { iniciales: Categoria[] }) {
       push(`Error: ${err.error || 'no se pudo'}`, 'error')
       return
     }
+    // Verificar que el servidor retornó la categoría con el valor correcto
+    const data = await res.json().catch(() => ({}))
+    const valorReal = data.categoria?.destacada
+    if (typeof valorReal === 'boolean' && valorReal !== nueva) {
+      push(`Estado inesperado: la BD dice ${valorReal} pero pediste ${nueva}`, 'error')
+      console.error('Mismatch:', { pedido: nueva, retornado: valorReal })
+      return
+    }
     setItems(items.map(x => x.id === c.id ? ({ ...x, destacada: nueva } as any) : x))
     push(nueva ? `"${c.nombre}" destacada en home` : `"${c.nombre}" quitada del home`)
+    // Forzar revalidación de la página para la próxima carga
+    router.refresh()
   }
 
   async function eliminar(id: number, nombre: string) {

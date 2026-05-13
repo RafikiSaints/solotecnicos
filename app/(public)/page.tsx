@@ -34,14 +34,20 @@ async function tecnicosTop(sb: any, regionId?: number, limit = 8) {
 export default async function HomePage() {
   const sb = createClient()
 
-  const [{ data: catDestacadas }, totalCatRes, { data: regiones }] = await Promise.all([
-    sb.from('categorias').select('*').eq('destacada', true).order('orden').limit(15),
-    sb.from('categorias').select('id', { count: 'exact', head: true }),
-    sb.from('regiones').select('*').order('orden'),
-  ])
+  // Categorías destacadas: usamos pg directo (PostgREST tiene schema cache pegado tras agregar columna)
+  const { sql } = await import('@/lib/pg')
+  const catDestacadasRaw = await sql`
+    SELECT id, nombre, slug, icono, descripcion, orden
+    FROM categorias
+    WHERE destacada = true
+    ORDER BY orden ASC
+    LIMIT 15
+  `
+  const totalCatRes = await sb.from('categorias').select('id', { count: 'exact', head: true })
+  const { data: regiones } = await sb.from('regiones').select('*').order('orden')
 
   // Fallback: si nadie marcó destacadas, mostrar primeras 10
-  let categorias = catDestacadas
+  let categorias: any = catDestacadasRaw
   if (!categorias || categorias.length === 0) {
     const { data: fallback } = await sb.from('categorias').select('*').order('orden').limit(10)
     categorias = fallback

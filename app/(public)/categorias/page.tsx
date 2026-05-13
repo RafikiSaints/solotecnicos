@@ -1,19 +1,26 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { sql } from '@/lib/pg'
 import { ArrowLeft, Sparkles } from 'lucide-react'
+import type { Categoria } from '@/types/database.types'
 
 export const metadata = {
   title: 'Todas las especialidades',
   description: 'Explora todas las especialidades técnicas y oficios disponibles en SoloTécnicos.',
 }
 
-export default async function CategoriasPage() {
-  const sb = createClient()
-  const { data: categorias } = await sb.from('categorias').select('*').order('orden')
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-  // Separar destacadas y otras
-  const destacadas = (categorias || []).filter((c: any) => c.destacada)
-  const otras = (categorias || []).filter((c: any) => !c.destacada)
+export default async function CategoriasPage() {
+  // Conexión directa Postgres (bypass schema cache)
+  const categorias = await sql<Categoria[]>`
+    SELECT id, nombre, slug, icono, descripcion, orden, destacada
+    FROM categorias
+    ORDER BY orden ASC
+  `
+
+  const destacadas = categorias.filter((c: any) => c.destacada)
+  const otras = categorias.filter((c: any) => !c.destacada)
 
   return (
     <div className="container-st py-12 max-w-5xl">
@@ -23,7 +30,7 @@ export default async function CategoriasPage() {
 
       <h1 className="font-display text-3xl md:text-4xl text-azul font-extrabold mb-2">Todas las especialidades</h1>
       <p className="text-gris-4 mb-8">
-        Explora {categorias?.length || 0} categorías de oficios y técnicos disponibles. Click en cualquiera para ver los profesionales.
+        Explora {categorias.length} categorías de oficios y técnicos disponibles. Click en cualquiera para ver los profesionales.
       </p>
 
       {destacadas.length > 0 && (
