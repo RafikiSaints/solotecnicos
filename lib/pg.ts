@@ -25,6 +25,18 @@ function makeClient() {
     idle_timeout: 20,
     connect_timeout: 10,
     prepare: false, // necesario para pgBouncer/Supabase pooler
+    types: {
+      // Por defecto postgres-js devuelve NUMERIC/DECIMAL como string (porque
+      // JS no representa decimales con precisión). Pero nuestra UI hace
+      // .toFixed() y operaciones aritméticas, así que conviene tenerlos
+      // como number (mismo comportamiento que Supabase JS / PostgREST).
+      numeric: {
+        to: 1700,
+        from: [1700],
+        serialize: (n: any) => String(n),
+        parse: (s: any) => (s === null ? null : parseFloat(s)),
+      },
+    },
   })
 }
 

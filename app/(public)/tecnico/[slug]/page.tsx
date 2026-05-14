@@ -37,6 +37,24 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
   }
   if (!tecnico) notFound()
 
+  // Defensa: garantizar que los decimales sean numbers (pg-js los puede
+  // devolver como string si la config de types no aplicó). La UI hace
+  // .toFixed() y operaciones aritméticas, así que strings = crash.
+  const toNum = (v: any) => (v === null || v === undefined || v === '' ? 0 : Number(v))
+  tecnico.rating_promedio   = toNum(tecnico.rating_promedio)
+  tecnico.rating_atencion   = toNum(tecnico.rating_atencion)
+  tecnico.rating_calidad    = toNum(tecnico.rating_calidad)
+  tecnico.rating_respuesta  = toNum(tecnico.rating_respuesta)
+  tecnico.rating_resolucion = toNum(tecnico.rating_resolucion)
+  tecnico.rating_rapidez    = toNum(tecnico.rating_rapidez)
+  tecnico.rating_precio     = toNum(tecnico.rating_precio)
+  tecnico.rating_garantia   = toNum(tecnico.rating_garantia)
+  tecnico.google_rating     = toNum(tecnico.google_rating)
+  tecnico.google_total_resenas = toNum(tecnico.google_total_resenas)
+  tecnico.total_resenas     = toNum(tecnico.total_resenas)
+  if (tecnico.lat !== null && tecnico.lat !== undefined) tecnico.lat = Number(tecnico.lat)
+  if (tecnico.lng !== null && tecnico.lng !== undefined) tecnico.lng = Number(tecnico.lng)
+
   const [
     { data: region },
     { data: categoriasRel },
