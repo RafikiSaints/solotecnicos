@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Edit3, ExternalLink, ShieldCheck, ShieldOff } from 'lucide-react'
+import { Edit3, ExternalLink, ShieldCheck, ShieldOff, Trash2 } from 'lucide-react'
 import { TablaPaginada } from '@/components/ui/TablaPaginada'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -70,6 +70,34 @@ export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
       setTecnicos(tecnicos.map(t => t.id === id ? { ...t, verificado: !actual } : t))
       push(actual ? 'Verificación quitada' : 'Técnico verificado')
     } else push(`Error: ${error.message}`, 'error')
+  }
+
+  async function eliminarTecnico(t: TecnicoAdmin) {
+    const confirmacion = prompt(
+      `⚠️ ELIMINAR PERMANENTEMENTE\n\n` +
+      `Vas a borrar "${t.nombre_empresa}" y TODOS sus datos asociados:\n` +
+      `• Categorías, servicios, fotos, sucursales\n` +
+      `• Reseñas, cotizaciones, pagos, visitas\n\n` +
+      `Esta acción NO se puede deshacer.\n\n` +
+      `Para confirmar, escribe el nombre exacto de la empresa:`
+    )
+    if (confirmacion === null) return
+    if (confirmacion.trim() !== t.nombre_empresa.trim()) {
+      push('El nombre no coincide. Eliminación cancelada.', 'error')
+      return
+    }
+    const res = await fetch('/api/admin/tecnico/eliminar', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: t.id }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      push(`Error: ${err.error || 'No se pudo eliminar'}`, 'error')
+      return
+    }
+    setTecnicos(prev => prev.filter(x => x.id !== t.id))
+    push(`"${t.nombre_empresa}" eliminado`)
   }
 
   return (
@@ -166,6 +194,9 @@ export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
                 </button>
                 <button onClick={() => toggleVerificado(t.id, t.verificado)} className="p-1.5 hover:bg-papel rounded" title={t.verificado ? 'Quitar verificación' : 'Verificar'}>
                   {t.verificado ? <ShieldOff size={14} className="text-rojo" /> : <ShieldCheck size={14} className="text-verde" />}
+                </button>
+                <button onClick={() => eliminarTecnico(t)} className="p-1.5 text-rojo hover:bg-rojo/10 rounded" title="Eliminar permanentemente">
+                  <Trash2 size={14} />
                 </button>
               </div>
             ),
