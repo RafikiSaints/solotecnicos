@@ -11,7 +11,7 @@ const schema = z.object({
   autor_email: z.string().email().optional().nullable(),
   autor_user_id: z.string().uuid().optional().nullable(),
   titulo: z.string().optional().nullable(),
-  comentario: z.string().min(30),
+  comentario: z.string().min(5),
   rating_atencion: dim, rating_calidad: dim, rating_respuesta: dim,
   rating_resolucion: dim, rating_rapidez: dim, rating_precio: dim, rating_garantia: dim,
 })

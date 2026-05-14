@@ -68,7 +68,9 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
     sb.from('tecnico_categorias').select('categorias(*)').eq('tecnico_id', tecnico.id),
     sb.from('tecnico_fotos').select('*').eq('tecnico_id', tecnico.id).order('orden'),
     sb.from('tecnico_servicios').select('*').eq('tecnico_id', tecnico.id).order('orden'),
-    sb.from('resenas').select('*').eq('tecnico_id', tecnico.id).eq('aprobada', true).order('created_at', { ascending: false }),
+    // Mostramos todas las reseñas (aprobadas + pendientes) excepto las reportadas/ocultas.
+    // El estado "aprobada" controla el badge ("Verificada" vs "Por revisar"), no la visibilidad.
+    sb.from('resenas').select('*').eq('tecnico_id', tecnico.id).eq('reportada', false).order('created_at', { ascending: false }),
     sb.from('tecnico_trabajos').select('*').eq('tecnico_id', tecnico.id).order('orden'),
     sb.from('tecnico_certificaciones').select('*').eq('tecnico_id', tecnico.id).eq('estado', 'aprobada'),
   ])

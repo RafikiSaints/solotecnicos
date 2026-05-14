@@ -4,7 +4,7 @@ import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Columna<T> {
   key: string
-  label: string
+  label: React.ReactNode
   render: (row: T) => React.ReactNode
   className?: string
 }

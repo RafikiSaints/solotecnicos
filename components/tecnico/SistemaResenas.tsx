@@ -100,12 +100,16 @@ function ListaResenas({ resenas }: { resenas: Resena[] }) {
   return (
     <div className="space-y-4">
       {visible.map(r => (
-        <article key={r.id} className="card">
+        <article key={r.id} className={`card ${!r.aprobada ? 'border-oro/30 bg-oro/5' : ''}`}>
           <div className="flex items-start justify-between mb-2">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <strong className="text-azul">{r.autor_nombre}</strong>
-                {r.autor_verificado && <Badge tone="verde"><ShieldCheck size={11} />Verificada</Badge>}
+                {r.aprobada ? (
+                  <Badge tone="verde"><ShieldCheck size={11} />Verificada</Badge>
+                ) : (
+                  <Badge tone="oro">⏳ Por revisar</Badge>
+                )}
               </div>
               <div className="text-xs text-gris-3">{tiempoTranscurrido(r.created_at)}</div>
             </div>
@@ -205,8 +209,8 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
       )
     }
 
-    if (comentario.length < 30) {
-      push('El comentario debe tener al menos 30 caracteres', 'error')
+    if (comentario.trim().length < 5) {
+      push('El comentario debe tener al menos 5 caracteres', 'error')
       return
     }
     setEnviando(true)
@@ -226,7 +230,7 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
     setEnviando(false)
     if (res.ok) {
       setOk(true)
-      push('¡Reseña enviada! Se publicará tras moderación')
+      push('¡Reseña enviada! Ya aparece en el perfil. Pasará a verificada tras la moderación.')
     } else {
       push('Error — intenta nuevamente', 'error')
     }
@@ -236,8 +240,8 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
     <div className="card text-center">
       <div className="text-3xl">⭐</div>
       <h4 className="font-display text-lg text-azul mt-2">¡Gracias por tu reseña!</h4>
-      <p className="text-sm text-gris-4">Será revisada por nuestro equipo antes de publicarse.</p>
-      <Badge tone="oro" className="mt-3">En revisión</Badge>
+      <p className="text-sm text-gris-4">Ya aparece en el perfil con etiqueta "Por revisar". Pasará a "Verificada" cuando nuestro equipo la apruebe (24-48 hrs).</p>
+      <Badge tone="oro" className="mt-3">⏳ Por revisar</Badge>
     </div>
   )
 
@@ -312,7 +316,7 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
       <Input label="Tu nombre" value={autor.nombre} onChange={e => setAutor(a => ({ ...a, nombre: e.target.value }))} required />
       <Input label="Email (no se publica, solo para verificación)" type="email" value={autor.email} onChange={e => setAutor(a => ({ ...a, email: e.target.value }))} />
       <Input label="Título (opcional)" value={titulo} onChange={e => setTitulo(e.target.value)} />
-      <Textarea label="Comentario" value={comentario} onChange={e => setComentario(e.target.value)} required helper={`${comentario.length} / 30 mínimo`} />
+      <Textarea label="Comentario" value={comentario} onChange={e => setComentario(e.target.value)} required helper={`${comentario.length} caracteres · mínimo 5`} />
 
       <input type="text" name="_h" className="hidden" tabIndex={-1} autoComplete="off" />
 
