@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { sql } from '@/lib/pg'
+import { createClient } from '@/lib/supabase/server'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import type { Categoria } from '@/types/database.types'
 
@@ -12,12 +12,21 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function CategoriasPage() {
-  // Conexión directa Postgres (bypass schema cache)
-  const categorias = await sql<Categoria[]>`
-    SELECT id, nombre, slug, icono, descripcion, orden, destacada
-    FROM categorias
-    ORDER BY orden ASC
-  `
+  // Intentamos pg directo (bypass schema cache); si falla, Supabase JS.
+  let categorias: Categoria[] = []
+  try {
+    const { sql } = await import('@/lib/pg')
+    categorias = await sql<Categoria[]>`
+      SELECT id, nombre, slug, icono, descripcion, orden, destacada
+      FROM categorias
+      ORDER BY orden ASC
+    `
+  } catch (e) {
+    console.warn('[categorias] pg directo falló, usando Supabase JS:', (e as any)?.message)
+    const sb = createClient()
+    const { data } = await sb.from('categorias').select('*').order('orden')
+    categorias = (data || []) as Categoria[]
+  }
 
   const destacadas = categorias.filter((c: any) => c.destacada)
   const otras = categorias.filter((c: any) => !c.destacada)

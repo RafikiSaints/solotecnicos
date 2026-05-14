@@ -34,15 +34,23 @@ async function tecnicosTop(sb: any, regionId?: number, limit = 8) {
 export default async function HomePage() {
   const sb = createClient()
 
-  // Categorías destacadas: usamos pg directo (PostgREST tiene schema cache pegado tras agregar columna)
-  const { sql } = await import('@/lib/pg')
-  const catDestacadasRaw = await sql`
-    SELECT id, nombre, slug, icono, descripcion, orden
-    FROM categorias
-    WHERE destacada = true
-    ORDER BY orden ASC
-    LIMIT 15
-  `
+  // Categorías destacadas: intentamos pg directo (bypass schema cache),
+  // pero si DATABASE_URL falla, caemos a Supabase JS. Así la home NUNCA crashea.
+  let catDestacadasRaw: any[] = []
+  try {
+    const { sql } = await import('@/lib/pg')
+    catDestacadasRaw = await sql`
+      SELECT id, nombre, slug, icono, descripcion, orden
+      FROM categorias
+      WHERE destacada = true
+      ORDER BY orden ASC
+      LIMIT 15
+    `
+  } catch (e) {
+    console.warn('[home] pg directo falló, usando Supabase JS:', (e as any)?.message)
+    const { data } = await sb.from('categorias').select('*').eq('destacada', true).order('orden').limit(15)
+    catDestacadasRaw = data || []
+  }
   const totalCatRes = await sb.from('categorias').select('id', { count: 'exact', head: true })
   const { data: regiones } = await sb.from('regiones').select('*').order('orden')
 
