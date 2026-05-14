@@ -8,6 +8,7 @@ import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
+import { useCotizacionStore } from '@/store/useCotizacionStore'
 
 const schema = z.object({
   cliente_nombre: z.string().min(2, 'Nombre requerido'),
@@ -26,6 +27,11 @@ export function FormularioCotizacion({ tecnicoId }: { tecnicoId: string }) {
   const [user, setUser] = useState<any>(null)
   const [datosCliente, setDatosCliente] = useState<{ nombre?: string; telefono?: string } | null>(null)
 
+  // Servicio seleccionado por el usuario (desde la sección "Servicios")
+  const servicioSel = useCotizacionStore(s => s.servicio)
+  const servicioTick = useCotizacionStore(s => s.tick)
+  const clearServicio = useCotizacionStore(s => s.clear)
+
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
@@ -39,17 +45,25 @@ export function FormularioCotizacion({ tecnicoId }: { tecnicoId: string }) {
       // Auto-llenar email
       if (user.email) setValue('cliente_email', user.email)
       // Buscar perfil cliente
-      const { data: cliente } = await supabase.from('clientes').select('nombre, telefono').eq('user_id', user.id).maybeSingle()
+      const { data: cliente } = await supabase.from('clientes').select('nombre, telefono, comuna').eq('user_id', user.id).maybeSingle()
       if (cliente) {
-        setDatosCliente(cliente)
+        setDatosCliente(cliente as any)
         if (cliente.nombre) setValue('cliente_nombre', cliente.nombre)
         if (cliente.telefono) setValue('cliente_telefono', cliente.telefono)
+        if ((cliente as any).comuna) setValue('comuna_servicio', (cliente as any).comuna)
       } else if (user.user_metadata?.nombre) {
         setValue('cliente_nombre', user.user_metadata.nombre)
       }
     }
     load()
   }, [setValue, supabase])
+
+  // Cuando se selecciona un servicio desde las tarjetas de "Servicios",
+  // pre-rellenamos la descripción con un template.
+  useEffect(() => {
+    if (!servicioSel) return
+    setValue('descripcion', `Servicio solicitado: ${servicioSel}\n\nDetalles adicionales (marca, modelo, problema, fecha deseada, etc.):\n`)
+  }, [servicioSel, servicioTick, setValue])
 
   async function onSubmit(data: FormData) {
     const res = await fetch('/api/cotizaciones', {
@@ -63,6 +77,7 @@ export function FormularioCotizacion({ tecnicoId }: { tecnicoId: string }) {
     })
     if (res.ok) {
       setEnviado(true)
+      clearServicio()
       push('Cotización enviada — el técnico te contactará pronto')
     } else {
       push('Error al enviar — intenta nuevamente', 'error')
@@ -88,6 +103,23 @@ export function FormularioCotizacion({ tecnicoId }: { tecnicoId: string }) {
     <form id="cotizar" onSubmit={handleSubmit(onSubmit)} className="card space-y-4">
       <h4 className="font-display text-lg text-azul font-bold">Solicitar cotización</h4>
       <p className="text-xs text-gris-3 -mt-2">Es gratis y sin compromiso. El técnico te contactará pronto.</p>
+
+      {servicioSel && (
+        <div className="rounded-md bg-rojo/5 border border-rojo/30 p-2.5 flex items-center justify-between gap-2">
+          <div className="text-xs">
+            <span className="font-semibold text-azul">Servicio seleccionado:</span>{' '}
+            <span className="text-gris-4">{servicioSel}</span>
+          </div>
+          <button
+            type="button"
+            onClick={clearServicio}
+            className="text-xs text-gris-3 hover:text-rojo"
+            title="Quitar selección"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {user ? (
         <div className="rounded-md bg-verde/5 border border-verde/30 p-2 text-xs text-verde">

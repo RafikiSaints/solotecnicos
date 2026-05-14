@@ -50,7 +50,7 @@ export default async function CategoriaRegionPage({ params }: { params: { slug: 
       <p className="text-gris-4 mt-1 mb-8">{tecnicos.length} técnicos verificados</p>
       <div className="grid md:grid-cols-2 gap-4">
         {tecnicos.map(t => (
-          <TarjetaTecnico key={t.id} tecnico={t} />
+          <TarjetaTecnico key={t.id} tecnico={t} mostrarBotonMapa={false} />
         ))}
       </div>
     </div>

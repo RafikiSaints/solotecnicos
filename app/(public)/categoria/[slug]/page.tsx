@@ -61,7 +61,7 @@ export default async function CategoriaPage({ params }: { params: { slug: string
 
       <div className="grid md:grid-cols-2 gap-4">
         {tecnicos.map(t => (
-          <TarjetaTecnico key={t.id} tecnico={t} />
+          <TarjetaTecnico key={t.id} tecnico={t} mostrarBotonMapa={false} />
         ))}
       </div>
     </div>

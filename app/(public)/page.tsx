@@ -184,7 +184,7 @@ export default async function HomePage() {
           ) : (
             <div className="grid md:grid-cols-2 gap-5">
               {destacadosDeRegion.map(t => (
-                <TarjetaTecnico key={t.id} tecnico={t} />
+                <TarjetaTecnico key={t.id} tecnico={t} mostrarBotonMapa={false} />
               ))}
             </div>
           )}

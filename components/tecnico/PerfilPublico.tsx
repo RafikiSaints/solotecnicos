@@ -17,6 +17,7 @@ import { SistemaResenas } from './SistemaResenas'
 import { clpFormat, youtubeEmbedUrl } from '@/lib/utils'
 import { limiteNumerico, puedeHacer } from '@/lib/planes'
 import { useEffect } from 'react'
+import { useCotizacionStore } from '@/store/useCotizacionStore'
 import type {
   Tecnico, Region, Categoria, Foto, Servicio, Resena, Trabajo, Certificacion,
 } from '@/types/database.types'
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, resenas, trabajos, certificaciones, esPropietario = false }: Props) {
+  const setServicio = useCotizacionStore(s => s.setServicio)
   // Limitar lo visible según el plan vigente. Las extras se quedan en BD pero no se muestran al público
   // (cuando el técnico renueve el plan, se vuelven a mostrar automáticamente).
   const limFotos = limiteNumerico(tecnico, 'fotos')
@@ -267,12 +269,25 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
                       </div>
                     </div>
                     {s.precio_desde ? (
-                      <div className="text-sm">
-                        <span className="text-xs text-gris-3">desde</span>{' '}
-                        <span className="font-bold text-azul-mid text-base">{clpFormat(s.precio_desde)}</span>
+                      <div className="text-sm flex items-center justify-between gap-2 flex-wrap">
+                        <div>
+                          <span className="text-xs text-gris-3">desde</span>{' '}
+                          <span className="font-bold text-azul-mid text-base">{clpFormat(s.precio_desde)}</span>
+                        </div>
+                        <a
+                          href="#cotizar"
+                          onClick={() => setServicio(s.nombre)}
+                          className="text-xs font-semibold text-rojo hover:text-rojo-hover"
+                        >
+                          Cotizar →
+                        </a>
                       </div>
                     ) : (
-                      <a href="#cotizar" className="inline-flex items-center gap-1 text-sm font-semibold text-rojo hover:text-rojo-hover">
+                      <a
+                        href="#cotizar"
+                        onClick={() => setServicio(s.nombre)}
+                        className="inline-flex items-center gap-1 text-sm font-semibold text-rojo hover:text-rojo-hover"
+                      >
                         💬 Solicitar cotización →
                       </a>
                     )}

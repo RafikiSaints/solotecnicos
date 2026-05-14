@@ -27,6 +27,33 @@ export async function POST(req: Request) {
     const { data: cot, error } = await sb.from('cotizaciones').insert(parsed).select().single()
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
+    // Si el usuario está logueado, persistir/actualizar sus datos en clientes
+    // para que la próxima cotización venga pre-rellena (nombre/tel/comuna).
+    if (parsed.cliente_user_id) {
+      try {
+        const { data: existente } = await sb.from('clientes')
+          .select('id').eq('user_id', parsed.cliente_user_id).maybeSingle()
+        if (existente) {
+          await sb.from('clientes').update({
+            nombre: parsed.cliente_nombre,
+            telefono: parsed.cliente_telefono || null,
+            ...(parsed.comuna_servicio ? { comuna: parsed.comuna_servicio } : {}),
+          }).eq('id', existente.id)
+        } else {
+          await sb.from('clientes').insert({
+            user_id: parsed.cliente_user_id,
+            nombre: parsed.cliente_nombre,
+            email: parsed.cliente_email,
+            telefono: parsed.cliente_telefono || null,
+            comuna: parsed.comuna_servicio || null,
+          })
+        }
+      } catch (e) {
+        // Si falla solo lo logueamos — no rompe la cotización
+        console.warn('[cotizaciones] no se pudo persistir cliente:', e)
+      }
+    }
+
     // Registrar visita
     sb.from('visitas').insert({ tecnico_id: parsed.tecnico_id, tipo: 'cotizacion', hora: new Date().getHours() }).then(() => {})
 

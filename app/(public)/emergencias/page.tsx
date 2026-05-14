@@ -56,7 +56,7 @@ export default async function EmergenciasPage({ searchParams }: { searchParams: 
               <p className="text-gris-4">No hay técnicos 24/7 con los filtros actuales.</p>
             </div>
           ) : (
-            tecnicos.map(t => <TarjetaTecnico key={t.id} tecnico={t} />)
+            tecnicos.map(t => <TarjetaTecnico key={t.id} tecnico={t} mostrarBotonMapa={false} />)
           )}
         </div>
       </div>

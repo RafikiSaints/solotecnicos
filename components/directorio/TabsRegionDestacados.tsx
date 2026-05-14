@@ -56,7 +56,7 @@ export function TabsRegionDestacados({ data }: Props) {
       {/* Grid de la región activa */}
       <div className="grid md:grid-cols-2 gap-5 animate-fade-in">
         {actual.tecnicos.map(t => (
-          <TarjetaTecnico key={t.id} tecnico={t} />
+          <TarjetaTecnico key={t.id} tecnico={t} mostrarBotonMapa={false} />
         ))}
       </div>
     </section>

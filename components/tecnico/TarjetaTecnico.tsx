@@ -14,9 +14,12 @@ interface TarjetaTecnicoProps {
   tecnico: TecnicoConRelaciones
   servicios?: string[]
   compact?: boolean
+  /** Mostrar botón "Ver en mapa" — solo aplica en la página /buscar donde
+   *  efectivamente hay un mapa al lado. Default true. */
+  mostrarBotonMapa?: boolean
 }
 
-export function TarjetaTecnico({ tecnico, servicios = [], compact = false }: TarjetaTecnicoProps) {
+export function TarjetaTecnico({ tecnico, servicios = [], compact = false, mostrarBotonMapa = true }: TarjetaTecnicoProps) {
   const { toggle, isSelected } = useComparadorStore()
   const selectMapa = useTecnicoSeleccionadoStore(s => s.select)
   const enfocadoId = useTecnicoSeleccionadoStore(s => s.selectedId)
@@ -178,7 +181,7 @@ export function TarjetaTecnico({ tecnico, servicios = [], compact = false }: Tar
             <Link href={`/tecnico/${tecnico.slug}`}>
               <Button variant="outline" size="sm">Ver perfil</Button>
             </Link>
-            {tieneCoords && (
+            {mostrarBotonMapa && tieneCoords && (
               <button
                 type="button"
                 onClick={() => selectMapa(tecnico.id)}
