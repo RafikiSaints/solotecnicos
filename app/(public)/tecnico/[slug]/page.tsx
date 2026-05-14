@@ -68,14 +68,20 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
     sb.from('tecnico_categorias').select('categorias(*)').eq('tecnico_id', tecnico.id),
     sb.from('tecnico_fotos').select('*').eq('tecnico_id', tecnico.id).order('orden'),
     sb.from('tecnico_servicios').select('*').eq('tecnico_id', tecnico.id).order('orden'),
-    // Mostramos todas las reseñas (aprobadas + pendientes) excepto las reportadas/ocultas.
+    // Mostramos todas las reseñas que no estén OCULTAS por admin.
     // El estado "aprobada" controla el badge ("Verificada" vs "Por revisar"), no la visibilidad.
-    sb.from('resenas').select('*').eq('tecnico_id', tecnico.id).eq('reportada', false).order('created_at', { ascending: false }),
+    // Reportadas por el técnico siguen visibles, pero el técnico ve un indicador.
+    sb.from('resenas').select('*').eq('tecnico_id', tecnico.id).eq('oculta', false).order('created_at', { ascending: false }),
     sb.from('tecnico_trabajos').select('*').eq('tecnico_id', tecnico.id).order('orden'),
     sb.from('tecnico_certificaciones').select('*').eq('tecnico_id', tecnico.id).eq('estado', 'aprobada'),
   ])
 
   const categorias = (categoriasRel || []).map((c: any) => c.categorias).filter(Boolean)
+
+  // Detectar si el visitante es el técnico dueño del perfil (para mostrar
+  // acciones como "Reportar reseña")
+  const { data: { user: visitante } } = await sb.auth.getUser()
+  const esPropietario = !!visitante && visitante.id === tecnico.user_id
 
   return (
     <PerfilPublico
@@ -87,6 +93,7 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
       resenas={resenas || []}
       trabajos={trabajos || []}
       certificaciones={certificaciones || []}
+      esPropietario={esPropietario}
     />
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Trash2, Check, X, ExternalLink, Eye, EyeOff } from 'lucide-react'
+import { Trash2, Check, X, ExternalLink, Eye, EyeOff, AlertOctagon } from 'lucide-react'
 import { TablaPaginada } from '@/components/ui/TablaPaginada'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -10,24 +10,28 @@ import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { tiempoTranscurrido } from '@/lib/utils'
 
+type FiltroEstado = 'todas' | 'pendientes' | 'aprobadas' | 'ocultas' | 'reportadas'
+
 export function ResenasModeracion({ resenas: ini }: { resenas: any[] }) {
   const [resenas, setResenas] = useState(ini)
-  const [filtroEstado, setFiltroEstado] = useState<'todas' | 'pendientes' | 'aprobadas' | 'ocultas'>('pendientes')
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('reportadas')
   const [seleccionadas, setSeleccionadas] = useState<Set<string>>(new Set())
   const supabase = createClient()
   const push = useToast(s => s.push)
 
   const data = resenas.filter(r => {
-    if (filtroEstado === 'pendientes') return !r.aprobada && !r.reportada
-    if (filtroEstado === 'aprobadas') return r.aprobada && !r.reportada
-    if (filtroEstado === 'ocultas') return r.reportada
+    if (filtroEstado === 'reportadas') return r.reportada && !r.oculta
+    if (filtroEstado === 'pendientes') return !r.aprobada && !r.oculta
+    if (filtroEstado === 'aprobadas') return r.aprobada && !r.oculta
+    if (filtroEstado === 'ocultas') return r.oculta
     return true
   })
 
   const contadores = {
-    pendientes: resenas.filter(r => !r.aprobada && !r.reportada).length,
-    aprobadas: resenas.filter(r => r.aprobada && !r.reportada).length,
-    ocultas: resenas.filter(r => r.reportada).length,
+    reportadas: resenas.filter(r => r.reportada && !r.oculta).length,
+    pendientes: resenas.filter(r => !r.aprobada && !r.oculta).length,
+    aprobadas: resenas.filter(r => r.aprobada && !r.oculta).length,
+    ocultas: resenas.filter(r => r.oculta).length,
   }
 
   function toggleSel(id: string) {
@@ -47,9 +51,9 @@ export function ResenasModeracion({ resenas: ini }: { resenas: any[] }) {
   }
 
   async function aprobar(id: string) {
-    await supabase.from('resenas').update({ aprobada: true, reportada: false }).eq('id', id)
-    setResenas(resenas.map(r => r.id === id ? { ...r, aprobada: true, reportada: false } : r))
-    push('Reseña aprobada y verificada')
+    await supabase.from('resenas').update({ aprobada: true }).eq('id', id)
+    setResenas(resenas.map(r => r.id === id ? { ...r, aprobada: true } : r))
+    push('Reseña aprobada (Verificada)')
   }
   async function desaprobar(id: string) {
     await supabase.from('resenas').update({ aprobada: false }).eq('id', id)
@@ -57,9 +61,15 @@ export function ResenasModeracion({ resenas: ini }: { resenas: any[] }) {
     push('Reseña vuelta a "Por revisar"')
   }
   async function ocultar(id: string, actual: boolean) {
-    await supabase.from('resenas').update({ reportada: !actual }).eq('id', id)
-    setResenas(resenas.map(r => r.id === id ? { ...r, reportada: !actual } : r))
-    push(actual ? 'Reseña visible nuevamente' : 'Reseña oculta del perfil público')
+    await supabase.from('resenas').update({ oculta: !actual }).eq('id', id)
+    setResenas(resenas.map(r => r.id === id ? { ...r, oculta: !actual } : r))
+    push(actual ? 'Reseña visible nuevamente (cuenta en el rating)' : 'Reseña oculta del perfil público (no cuenta)')
+  }
+  async function descartarReporte(id: string) {
+    // El técnico la reportó pero admin decide que está OK → desmarcar
+    await supabase.from('resenas').update({ reportada: false, reportada_motivo: null }).eq('id', id)
+    setResenas(resenas.map(r => r.id === id ? { ...r, reportada: false, reportada_motivo: null } : r))
+    push('Reporte descartado — la reseña queda como estaba')
   }
   async function eliminar(id: string) {
     if (!confirm('¿Eliminar permanentemente esta reseña? Esta acción no se puede deshacer.')) return
@@ -73,22 +83,22 @@ export function ResenasModeracion({ resenas: ini }: { resenas: any[] }) {
     const ids = Array.from(seleccionadas)
     if (ids.length === 0) return
     const { error } = await supabase.from('resenas')
-      .update({ aprobada: true, reportada: false })
+      .update({ aprobada: true })
       .in('id', ids)
     if (error) { push(`Error: ${error.message}`, 'error'); return }
-    setResenas(resenas.map(r => ids.includes(r.id) ? { ...r, aprobada: true, reportada: false } : r))
+    setResenas(resenas.map(r => ids.includes(r.id) ? { ...r, aprobada: true } : r))
     push(`✓ ${ids.length} reseña${ids.length !== 1 ? 's' : ''} aprobada${ids.length !== 1 ? 's' : ''}`)
     limpiarSel()
   }
   async function ocultarSeleccionadas() {
     const ids = Array.from(seleccionadas)
     if (ids.length === 0) return
-    if (!confirm(`¿Ocultar ${ids.length} reseña${ids.length !== 1 ? 's' : ''} del perfil público?`)) return
+    if (!confirm(`¿Ocultar ${ids.length} reseña${ids.length !== 1 ? 's' : ''} del perfil público? (Deja de contar en el rating)`)) return
     const { error } = await supabase.from('resenas')
-      .update({ reportada: true })
+      .update({ oculta: true })
       .in('id', ids)
     if (error) { push(`Error: ${error.message}`, 'error'); return }
-    setResenas(resenas.map(r => ids.includes(r.id) ? { ...r, reportada: true } : r))
+    setResenas(resenas.map(r => ids.includes(r.id) ? { ...r, oculta: true } : r))
     push(`${ids.length} reseña${ids.length !== 1 ? 's' : ''} ocultada${ids.length !== 1 ? 's' : ''}`)
     limpiarSel()
   }
@@ -110,9 +120,10 @@ export function ResenasModeracion({ resenas: ini }: { resenas: any[] }) {
     <div className="space-y-4">
       {/* Tabs de estado */}
       <div className="flex flex-wrap gap-2 text-sm">
+        <Tab active={filtroEstado === 'reportadas'} onClick={() => { setFiltroEstado('reportadas'); limpiarSel() }} label="🚩 Reportadas por técnico" count={contadores.reportadas} tone="rojo" />
         <Tab active={filtroEstado === 'pendientes'} onClick={() => { setFiltroEstado('pendientes'); limpiarSel() }} label="Por revisar" count={contadores.pendientes} tone="oro" />
         <Tab active={filtroEstado === 'aprobadas'} onClick={() => { setFiltroEstado('aprobadas'); limpiarSel() }} label="Verificadas" count={contadores.aprobadas} tone="verde" />
-        <Tab active={filtroEstado === 'ocultas'} onClick={() => { setFiltroEstado('ocultas'); limpiarSel() }} label="Ocultas" count={contadores.ocultas} tone="rojo" />
+        <Tab active={filtroEstado === 'ocultas'} onClick={() => { setFiltroEstado('ocultas'); limpiarSel() }} label="Ocultas" count={contadores.ocultas} />
         <Tab active={filtroEstado === 'todas'} onClick={() => { setFiltroEstado('todas'); limpiarSel() }} label="Todas" count={resenas.length} />
       </div>
 
@@ -203,6 +214,16 @@ export function ResenasModeracion({ resenas: ini }: { resenas: any[] }) {
               <div className="max-w-md">
                 {r.titulo && <div className="font-medium text-azul text-sm">{r.titulo}</div>}
                 <div className="text-xs text-gris-4 line-clamp-2">{r.comentario}</div>
+                {r.reportada && r.reportada_motivo && (
+                  <details className="mt-1.5 text-[11px]">
+                    <summary className="cursor-pointer text-rojo font-semibold inline-flex items-center gap-1">
+                      <AlertOctagon size={11} /> Motivo del técnico
+                    </summary>
+                    <div className="mt-1 p-2 rounded bg-rojo/5 border border-rojo/20 text-gris-4 italic">
+                      {r.reportada_motivo}
+                    </div>
+                  </details>
+                )}
               </div>
             ),
           },
@@ -211,11 +232,10 @@ export function ResenasModeracion({ resenas: ini }: { resenas: any[] }) {
             label: 'Estado',
             render: (r: any) => (
               <div className="flex flex-col gap-1">
-                {r.reportada
-                  ? <Badge tone="rojo">🚫 Oculta</Badge>
-                  : r.aprobada
-                    ? <Badge tone="verde">✓ Verificada</Badge>
-                    : <Badge tone="oro">⏳ Por revisar</Badge>}
+                {r.oculta && <Badge tone="rojo">🚫 Oculta</Badge>}
+                {!r.oculta && r.aprobada && <Badge tone="verde">✓ Verificada</Badge>}
+                {!r.oculta && !r.aprobada && <Badge tone="oro">⏳ Por revisar</Badge>}
+                {r.reportada && !r.oculta && <Badge tone="rojo">🚩 Reportada</Badge>}
               </div>
             ),
           },
@@ -238,8 +258,13 @@ export function ResenasModeracion({ resenas: ini }: { resenas: any[] }) {
                     <X size={14} />
                   </button>
                 )}
-                <button onClick={() => ocultar(r.id, r.reportada)} className="p-1.5 hover:bg-papel rounded" title={r.reportada ? 'Volver a mostrar en el perfil' : 'Ocultar del perfil público'}>
-                  {r.reportada
+                {r.reportada && (
+                  <button onClick={() => descartarReporte(r.id)} className="p-1.5 hover:bg-papel rounded" title="Descartar reporte del técnico — la reseña queda como estaba">
+                    <AlertOctagon size={14} className="text-rojo" />
+                  </button>
+                )}
+                <button onClick={() => ocultar(r.id, r.oculta)} className="p-1.5 hover:bg-papel rounded" title={r.oculta ? 'Volver a mostrar en el perfil' : 'Ocultar del perfil público'}>
+                  {r.oculta
                     ? <Eye size={14} className="text-azul-mid" />
                     : <EyeOff size={14} className="text-gris-3" />}
                 </button>

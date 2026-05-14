@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { useToast } from '@/components/ui/Toast'
 import { tiempoTranscurrido } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import { ShieldCheck, ChevronDown, ChevronUp, Star } from 'lucide-react'
+import { ShieldCheck, ChevronDown, ChevronUp, Star, Flag, AlertOctagon } from 'lucide-react'
 import type { Resena } from '@/types/database.types'
 
 const DIMENSIONES = [
@@ -22,11 +22,11 @@ const DIMENSIONES = [
   { key: 'rating_garantia',  label: 'Garantía ofrecida' },
 ] as const
 
-export function SistemaResenas({ tecnicoId, resenas, ratingsTecnico }: { tecnicoId: string; resenas: Resena[]; ratingsTecnico?: Record<string, number> }) {
+export function SistemaResenas({ tecnicoId, resenas, ratingsTecnico, esPropietario = false }: { tecnicoId: string; resenas: Resena[]; ratingsTecnico?: Record<string, number>; esPropietario?: boolean }) {
   return (
     <div className="space-y-6">
       {ratingsTecnico && <DesgloseRatings ratings={ratingsTecnico} total={resenas.length} />}
-      <ListaResenas resenas={resenas} />
+      <ListaResenas resenas={resenas} esPropietario={esPropietario} />
       <FormularioResena tecnicoId={tecnicoId} />
     </div>
   )
@@ -86,8 +86,9 @@ function DesgloseRatings({ ratings, total }: { ratings: Record<string, number>; 
   )
 }
 
-function ListaResenas({ resenas }: { resenas: Resena[] }) {
+function ListaResenas({ resenas, esPropietario }: { resenas: Resena[]; esPropietario: boolean }) {
   const [page, setPage] = useState(1)
+  const [reportando, setReportando] = useState<Resena | null>(null)
   const perPage = 10
   const total = resenas.length
   const totalPages = Math.ceil(total / perPage)
@@ -101,7 +102,7 @@ function ListaResenas({ resenas }: { resenas: Resena[] }) {
   return (
     <div className="space-y-4">
       {visible.map(r => (
-        <article key={r.id} className={`card ${!r.aprobada ? 'border-oro/30 bg-oro/5' : ''}`}>
+        <article key={r.id} className={`card ${(r as any).reportada ? 'border-rojo/30 bg-rojo/5' : !r.aprobada ? 'border-oro/30 bg-oro/5' : ''}`}>
           <div className="flex items-start justify-between mb-2">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -110,6 +111,9 @@ function ListaResenas({ resenas }: { resenas: Resena[] }) {
                   <Badge tone="verde"><ShieldCheck size={11} />Verificada</Badge>
                 ) : (
                   <Badge tone="oro">⏳ Por revisar</Badge>
+                )}
+                {(r as any).reportada && (
+                  <Badge tone="rojo"><AlertOctagon size={11} />Reportada por el técnico</Badge>
                 )}
               </div>
               <div className="text-xs text-gris-3">{tiempoTranscurrido(r.created_at)}</div>
@@ -140,6 +144,25 @@ function ListaResenas({ resenas }: { resenas: Resena[] }) {
               <p className="text-sm text-gris-4 mt-1.5">{r.respuesta_tecnico}</p>
             </div>
           )}
+
+          {/* Botón "Reportar" — solo el técnico dueño del perfil lo ve */}
+          {esPropietario && !(r as any).reportada && (
+            <div className="mt-3 pt-3 border-t border-borde/50 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setReportando(r)}
+                className="text-xs text-rojo/70 hover:text-rojo inline-flex items-center gap-1 font-medium"
+              >
+                <Flag size={12} /> Reportar reseña
+              </button>
+            </div>
+          )}
+          {esPropietario && (r as any).reportada && (
+            <div className="mt-3 pt-3 border-t border-borde/50 flex items-center gap-2 text-xs text-rojo/80">
+              <AlertOctagon size={12} />
+              <span>Reportaste esta reseña. Espera la revisión del equipo de SoloTécnicos.</span>
+            </div>
+          )}
         </article>
       ))}
 
@@ -149,6 +172,15 @@ function ListaResenas({ resenas }: { resenas: Resena[] }) {
           <span className="text-sm text-gris-4">{page} / {totalPages}</span>
           <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>›</Button>
         </div>
+      )}
+
+      {/* Modal para reportar */}
+      {reportando && (
+        <ModalReportar
+          resena={reportando}
+          onClose={() => setReportando(null)}
+          onReported={() => setReportando(null)}
+        />
       )}
     </div>
   )
@@ -339,5 +371,88 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
         <Button variant="ghost" type="button" onClick={() => setOpen(false)}>Cancelar</Button>
       </div>
     </form>
+  )
+}
+
+/**
+ * Modal para que el técnico dueño del perfil reporte una reseña
+ * como problemática. Pide motivo (mínimo 10 chars) y manda al admin para revisión.
+ */
+function ModalReportar({ resena, onClose, onReported }: { resena: Resena; onClose: () => void; onReported: () => void }) {
+  const [motivo, setMotivo] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const push = useToast(s => s.push)
+  const router = useRouter()
+
+  async function enviar() {
+    if (motivo.trim().length < 10) {
+      push('Explica el motivo (mínimo 10 caracteres)', 'error')
+      return
+    }
+    setEnviando(true)
+    const res = await fetch(`/api/resenas/${resena.id}/reportar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ motivo }),
+    })
+    setEnviando(false)
+    if (res.ok) {
+      push('Reseña reportada. Nuestro equipo la revisará pronto.')
+      router.refresh()
+      onReported()
+    } else {
+      const err = await res.json().catch(() => ({}))
+      push(`Error: ${err.error || 'No se pudo reportar'}`, 'error')
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4"
+        onClick={e => e.stopPropagation()}
+      >
+        <div>
+          <h3 className="font-display text-xl text-azul font-bold flex items-center gap-2">
+            <Flag size={20} className="text-rojo" /> Reportar reseña
+          </h3>
+          <p className="text-sm text-gris-4 mt-1">
+            La reseña <strong>seguirá visible</strong> hasta que nuestro equipo la revise.
+            Si tu reporte es justificado, será ocultada o eliminada.
+          </p>
+        </div>
+
+        <div className="rounded-md bg-papel border border-borde p-3 text-sm">
+          <div className="text-xs text-gris-3 mb-1">{resena.autor_nombre} · ⭐ {resena.rating_promedio.toFixed(1)}</div>
+          {resena.titulo && <div className="font-medium text-azul">{resena.titulo}</div>}
+          <div className="text-gris-4 line-clamp-3">{resena.comentario}</div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-azul mb-1">
+            ¿Por qué reportas esta reseña? *
+          </label>
+          <textarea
+            value={motivo}
+            onChange={e => setMotivo(e.target.value)}
+            rows={4}
+            placeholder="Ej: La reseña es falsa, nunca trabajé con esta persona / contiene insultos / es spam / no corresponde a mi servicio…"
+            className="w-full p-3 text-sm rounded-md border-2 border-borde focus:outline-none focus:border-azul-mid resize-none"
+            maxLength={1000}
+          />
+          <div className="text-[11px] text-gris-3 mt-1">{motivo.length} / 1000 · mínimo 10 caracteres</div>
+        </div>
+
+        <div className="flex gap-2 justify-end">
+          <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button type="button" onClick={enviar} loading={enviando} className="!bg-rojo hover:!bg-rojo/90">
+            <Flag size={14} /> Enviar reporte
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -6,8 +6,10 @@ export const revalidate = 0
 
 export default async function AdminResenas() {
   const sb = createServiceClient()
+  // Reportadas primero, luego pendientes, luego el resto
   const { data: resenas } = await sb.from('resenas')
     .select('*, tecnicos(nombre_empresa, slug)')
+    .order('reportada', { ascending: false })
     .order('aprobada')
     .order('created_at', { ascending: false })
 

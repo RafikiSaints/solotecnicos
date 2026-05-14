@@ -32,9 +32,10 @@ interface Props {
   resenas: Resena[]
   trabajos: Trabajo[]
   certificaciones: Certificacion[]
+  esPropietario?: boolean
 }
 
-export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, resenas, trabajos, certificaciones }: Props) {
+export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, resenas, trabajos, certificaciones, esPropietario = false }: Props) {
   // Limitar lo visible según el plan vigente. Las extras se quedan en BD pero no se muestran al público
   // (cuando el técnico renueve el plan, se vuelven a mostrar automáticamente).
   const limFotos = limiteNumerico(tecnico, 'fotos')
@@ -312,6 +313,7 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
             <SistemaResenas
               tecnicoId={tecnico.id}
               resenas={resenas}
+              esPropietario={esPropietario}
               ratingsTecnico={{
                 rating_promedio: tecnico.rating_promedio,
                 rating_atencion: tecnico.rating_atencion,
