@@ -31,13 +31,14 @@ export default function Icon() {
         <div
           style={{
             color: 'white',
-            fontSize: 22,
+            fontSize: 16,
             fontWeight: 900,
             lineHeight: 1,
             marginLeft: 6,
+            letterSpacing: '-1px',
           }}
         >
-          ★
+          ST
         </div>
       </div>
     ),
