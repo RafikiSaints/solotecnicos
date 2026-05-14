@@ -30,7 +30,7 @@ export function ContactoCard({ tecnico }: { tecnico: Tecnico }) {
         >
           <Phone size={18} className="text-azul-mid" />
           <div className="flex-1">
-            <div className="text-xs text-gris-3">Teléfono</div>
+            <div className="text-xs text-gris-3">Llamar</div>
             <div className="font-semibold text-azul">{tecnico.telefono}</div>
           </div>
         </a>
@@ -103,8 +103,8 @@ export function ContactoCard({ tecnico }: { tecnico: Tecnico }) {
         </a>
       )}
 
-      {/* Google Maps (solo PRO/Elite) */}
-      {esPro && tecnico.link_google_maps && (
+      {/* Google Maps — aparece si tiene el link cargado (cualquier plan) */}
+      {tecnico.link_google_maps && (
         <a
           href={tecnico.link_google_maps}
           target="_blank"
@@ -119,8 +119,8 @@ export function ContactoCard({ tecnico }: { tecnico: Tecnico }) {
         </a>
       )}
 
-      {/* Google My Business (solo PRO/Elite) */}
-      {esPro && tecnico.link_google_business && (
+      {/* Google My Business — aparece si tiene el link cargado (cualquier plan) */}
+      {tecnico.link_google_business && (
         <a
           href={tecnico.link_google_business}
           target="_blank"
