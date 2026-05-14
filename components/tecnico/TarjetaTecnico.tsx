@@ -1,12 +1,13 @@
 'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Clock, ShieldCheck, MessageCircle, Phone } from 'lucide-react'
+import { MapPin, Clock, ShieldCheck, MessageCircle, Phone, Map as MapIcon } from 'lucide-react'
 import { RatingDisplay } from '@/components/ui/StarRating'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { estaAbiertoAhora, truncar } from '@/lib/utils'
 import { useComparadorStore } from '@/store/useComparadorStore'
+import { useTecnicoSeleccionadoStore } from '@/store/useTecnicoSeleccionadoStore'
 import type { TecnicoConRelaciones } from '@/types/database.types'
 
 interface TarjetaTecnicoProps {
@@ -17,16 +18,25 @@ interface TarjetaTecnicoProps {
 
 export function TarjetaTecnico({ tecnico, servicios = [], compact = false }: TarjetaTecnicoProps) {
   const { toggle, isSelected } = useComparadorStore()
+  const selectMapa = useTecnicoSeleccionadoStore(s => s.select)
+  const enfocadoId = useTecnicoSeleccionadoStore(s => s.selectedId)
   const selected = isSelected(tecnico.id)
+  const enfocado = enfocadoId === tecnico.id
   const abierto = estaAbiertoAhora(tecnico.horarios)
   const isElite = tecnico.plan === 'elite'
   const isPro = tecnico.plan === 'pro'
+  const tieneCoords = tecnico.lat != null && tecnico.lng != null
+  const tieneResenasPropias = (tecnico.total_resenas || 0) > 0
+  const tieneRatingGoogle = (tecnico.google_total_resenas || 0) > 0
+  const tieneLinkGoogle = !!(tecnico.link_google_business || tecnico.link_google_maps)
 
   return (
     <article className={`relative rounded-lg overflow-hidden hover:shadow-card transition-shadow duration-200 group ${
       isElite
         ? 'bg-gradient-to-br from-oro/10 via-white to-white border-2 border-oro shadow-soft'
-        : 'bg-white border border-borde'
+        : enfocado
+          ? 'bg-white border-2 border-azul shadow-card ring-2 ring-azul/20'
+          : 'bg-white border border-borde'
     }`}>
       {/* Banner Elite destacado */}
       {isElite && (
@@ -96,6 +106,50 @@ export function TarjetaTecnico({ tecnico, servicios = [], compact = false }: Tar
             {tecnico.atiende_domicilio && <Badge tone="gris">A domicilio</Badge>}
           </div>
 
+          {/* Reseñas Google adaptativas:
+              - Sin reseñas propias + rating Google cargado → mini card con rating + cuenta
+              - Con reseñas propias o sin rating pero con link → solo link "Ver Google" */}
+          {!tieneResenasPropias && tieneRatingGoogle ? (
+            <a
+              href={tecnico.link_google_business || tecnico.link_google_maps || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="inline-flex items-center gap-2 bg-papel hover:bg-papel/80 border border-borde rounded-md px-2.5 py-1 mb-2 transition-colors w-fit"
+              title="Ver reseñas en Google"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              <span className="text-xs font-semibold text-azul">
+                {(tecnico.google_rating || 0).toFixed(1)}
+              </span>
+              <span className="text-[11px] text-gris-3">
+                ({tecnico.google_total_resenas} en Google) ↗
+              </span>
+            </a>
+          ) : tieneLinkGoogle ? (
+            <a
+              href={tecnico.link_google_business || tecnico.link_google_maps || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="inline-flex items-center gap-1.5 text-xs text-azul-mid hover:underline mb-2 w-fit"
+              title="Ver reseñas en Google"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Ver reseñas de Google ↗
+            </a>
+          ) : null}
+
           {!compact && tecnico.descripcion_corta && (
             <p className="text-sm text-gris-4 leading-snug mb-2 line-clamp-2">
               {truncar(tecnico.descripcion_corta, 140)}
@@ -124,6 +178,21 @@ export function TarjetaTecnico({ tecnico, servicios = [], compact = false }: Tar
             <Link href={`/tecnico/${tecnico.slug}`}>
               <Button variant="outline" size="sm">Ver perfil</Button>
             </Link>
+            {tieneCoords && (
+              <button
+                type="button"
+                onClick={() => selectMapa(tecnico.id)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                  enfocado
+                    ? 'bg-azul text-white border-azul'
+                    : 'bg-white text-azul-mid border-borde hover:border-azul-mid hover:bg-azul-mid/5'
+                }`}
+                title="Ver ubicación en el mapa"
+              >
+                <MapIcon size={12} />
+                {enfocado ? 'En mapa ✓' : 'Ver en mapa'}
+              </button>
+            )}
             <label className="ml-auto flex items-center gap-1.5 text-xs text-gris-4 cursor-pointer select-none">
               <input
                 type="checkbox"
