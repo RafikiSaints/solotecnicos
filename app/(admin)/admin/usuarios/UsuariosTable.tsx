@@ -2,12 +2,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { UserPlus, ExternalLink, Wrench } from 'lucide-react'
+import { UserPlus, ExternalLink, Wrench, Edit3, Trash2 } from 'lucide-react'
 import { TablaPaginada } from '@/components/ui/TablaPaginada'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { Input, Textarea } from '@/components/ui/Input'
+import { Input, Select, Textarea } from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { formatearFecha, tiempoTranscurrido } from '@/lib/utils'
@@ -24,9 +24,10 @@ interface UsuarioRow {
 }
 
 export function UsuariosTable({ usuarios: ini }: { usuarios: UsuarioRow[] }) {
-  const [usuarios] = useState(ini)
+  const [usuarios, setUsuarios] = useState(ini)
   const [filtro, setFiltro] = useState<'todos' | 'tecnico' | 'cliente' | 'admin'>('todos')
   const [convertir, setConvertir] = useState<UsuarioRow | null>(null)
+  const [editando, setEditando] = useState<UsuarioRow | null>(null)
   const [form, setForm] = useState({ nombre_empresa: '' })
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
@@ -38,6 +39,36 @@ export function UsuariosTable({ usuarios: ini }: { usuarios: UsuarioRow[] }) {
     tecnico: usuarios.filter(u => u.tipo === 'tecnico').length,
     cliente: usuarios.filter(u => u.tipo === 'cliente').length,
     admin: usuarios.filter(u => u.tipo === 'admin').length,
+  }
+
+  async function eliminarUsuario(u: UsuarioRow) {
+    const confirmacion = prompt(
+      `⚠️ ELIMINAR USUARIO PERMANENTEMENTE\n\n` +
+      `Vas a borrar la cuenta de:\n${u.nombre} (${u.email})\n\n` +
+      (u.tipo === 'tecnico'
+        ? `🚨 ATENCIÓN: este usuario tiene un PERFIL TÉCNICO vinculado.\n` +
+          `Al borrar la cuenta, también se eliminan:\n` +
+          `• El perfil técnico completo y sus reseñas, fotos, etc.\n` +
+          `• Todas las cotizaciones, certificaciones y datos asociados.\n\n`
+        : u.tipo === 'cliente'
+          ? `📋 Este es un cliente. Sus cotizaciones y datos personales también se eliminan.\n\n`
+          : ``) +
+      `Esta acción NO se puede deshacer.\n\n` +
+      `Para confirmar, escribe el EMAIL exacto:`
+    )
+    if (confirmacion === null) return
+    if (confirmacion.trim().toLowerCase() !== u.email.toLowerCase()) {
+      push('El email no coincide. Eliminación cancelada.', 'error')
+      return
+    }
+    const res = await fetch(`/api/admin/usuario/${u.id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      push(`Error: ${err.error || 'No se pudo eliminar'}`, 'error')
+      return
+    }
+    setUsuarios(prev => prev.filter(x => x.id !== u.id))
+    push(`"${u.email}" eliminado`)
   }
 
   async function convertirACliente(u: UsuarioRow) {
@@ -144,22 +175,42 @@ export function UsuariosTable({ usuarios: ini }: { usuarios: UsuarioRow[] }) {
             key: 'acciones',
             label: 'Acciones',
             render: u => (
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1 items-center">
                 {u.tipo === 'tecnico' && u.slug && (
                   <Link href={`/tecnico/${u.slug}`} target="_blank" className="p-1.5 text-azul-mid hover:bg-azul-mid/10 rounded" title="Ver perfil público">
                     <ExternalLink size={14} />
                   </Link>
                 )}
+                <button onClick={() => setEditando(u)} className="p-1.5 text-azul-mid hover:bg-azul-mid/10 rounded" title="Editar usuario">
+                  <Edit3 size={14} />
+                </button>
                 {(u.tipo === 'cliente' || u.tipo === 'sin_perfil') && (
-                  <button onClick={() => setConvertir(u)} className="text-xs text-azul-mid hover:underline inline-flex items-center gap-1 px-2">
-                    <Wrench size={12} /> Convertir a técnico
+                  <button onClick={() => setConvertir(u)} className="text-xs text-azul-mid hover:underline inline-flex items-center gap-1 px-2" title="Convertir a técnico">
+                    <Wrench size={12} /> Convertir
                   </button>
                 )}
+                <button onClick={() => eliminarUsuario(u)} className="p-1.5 text-rojo hover:bg-rojo/10 rounded" title="Eliminar usuario permanentemente">
+                  <Trash2 size={14} />
+                </button>
               </div>
             ),
           },
         ]}
       />
+
+      {/* Modal editar usuario */}
+      <Modal open={!!editando} onClose={() => setEditando(null)} title={`Editar usuario: ${editando?.email}`}>
+        {editando && (
+          <EditarUsuarioForm
+            usuario={editando}
+            onClose={() => setEditando(null)}
+            onSaved={(updated) => {
+              setUsuarios(prev => prev.map(u => u.id === editando.id ? { ...u, ...updated } : u))
+              setEditando(null)
+            }}
+          />
+        )}
+      </Modal>
 
       {/* Modal convertir */}
       <Modal open={!!convertir} onClose={() => setConvertir(null)} title="Convertir a técnico">
@@ -200,5 +251,108 @@ function Tab({ active, onClick, label, count }: { active: boolean; onClick: () =
     >
       {label} {count > 0 && <span className={`ml-1 text-xs ${active ? 'opacity-80' : 'text-gris-3'}`}>({count})</span>}
     </button>
+  )
+}
+
+function EditarUsuarioForm({
+  usuario,
+  onClose,
+  onSaved,
+}: {
+  usuario: UsuarioRow
+  onClose: () => void
+  onSaved: (u: Partial<UsuarioRow>) => void
+}) {
+  const push = useToast(s => s.push)
+  const [form, setForm] = useState({
+    email: usuario.email || '',
+    nombre: usuario.nombre === '—' ? '' : usuario.nombre,
+    role: usuario.tipo === 'admin' ? 'admin' : usuario.tipo === 'tecnico' ? 'tecnico' : usuario.tipo === 'cliente' ? 'cliente' : '',
+    password: '',
+    email_confirm: !!usuario.confirmed_at,
+  })
+  const [saving, setSaving] = useState(false)
+
+  async function guardar(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    const body: any = {
+      email: form.email.trim(),
+      nombre: form.nombre.trim() || null,
+      role: form.role || null,
+      email_confirm: form.email_confirm,
+    }
+    if (form.password.trim()) body.password = form.password
+    const res = await fetch(`/api/admin/usuario/${usuario.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    setSaving(false)
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      push(`Error: ${err.error || 'No se pudo guardar'}`, 'error')
+      return
+    }
+    push('Usuario actualizado ✓')
+    onSaved({
+      email: body.email,
+      nombre: body.nombre || '—',
+      tipo: (body.role as any) || 'sin_perfil',
+      confirmed_at: form.email_confirm ? (usuario.confirmed_at || new Date().toISOString()) : null,
+    })
+  }
+
+  return (
+    <form onSubmit={guardar} className="space-y-4">
+      <Input
+        label="Email"
+        type="email"
+        required
+        value={form.email}
+        onChange={e => setForm({ ...form, email: e.target.value })}
+        helper="Cambiarlo le obliga al usuario a confirmar el nuevo en su correo."
+      />
+      <Input
+        label="Nombre"
+        value={form.nombre}
+        onChange={e => setForm({ ...form, nombre: e.target.value })}
+        placeholder="Nombre de la persona o empresa"
+      />
+      <Select label="Rol" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
+        <option value="">Sin rol específico</option>
+        <option value="cliente">Cliente</option>
+        <option value="tecnico">Técnico</option>
+        <option value="admin">Admin</option>
+      </Select>
+      <Input
+        label="Cambiar contraseña (opcional)"
+        type="password"
+        value={form.password}
+        onChange={e => setForm({ ...form, password: e.target.value })}
+        placeholder="Dejar vacío para no cambiar"
+        helper="Mínimo 6 caracteres si querés cambiarla."
+      />
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={form.email_confirm}
+          onChange={e => setForm({ ...form, email_confirm: e.target.checked })}
+        />
+        <span className="text-sm">✓ Email confirmado (marca como confirmado sin enviar email)</span>
+      </label>
+
+      <div className="rounded-md bg-papel p-2.5 text-[11px] text-gris-4">
+        <strong>📋 Info de la cuenta:</strong>
+        <div>User ID: <span className="font-mono text-[10px]">{usuario.id}</span></div>
+        <div>Registrado: {formatearFecha(usuario.created_at)}</div>
+        <div>Último login: {usuario.last_sign_in_at ? tiempoTranscurrido(usuario.last_sign_in_at) : 'nunca'}</div>
+      </div>
+
+      <div className="flex gap-2 justify-end pt-2 border-t border-borde">
+        <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" loading={saving}>Guardar cambios</Button>
+      </div>
+    </form>
   )
 }

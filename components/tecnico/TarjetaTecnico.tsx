@@ -182,10 +182,12 @@ export function TarjetaTecnico({ tecnico, servicios = [], compact = false, mostr
               <Button variant="outline" size="sm">Ver perfil</Button>
             </Link>
             {mostrarBotonMapa && tieneCoords && (
+              // hidden en móvil porque el mapa solo se muestra en lg+
+              // (en pantallas chicas el mapa estaría fuera de viewport)
               <button
                 type="button"
                 onClick={() => selectMapa(tecnico.id)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                className={`hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                   enfocado
                     ? 'bg-azul text-white border-azul'
                     : 'bg-white text-azul-mid border-borde hover:border-azul-mid hover:bg-azul-mid/5'
