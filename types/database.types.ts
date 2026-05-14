@@ -68,6 +68,8 @@ export interface Tecnico {
   video_url: string | null
   logo_url: string | null
   logo_storage_path: string | null
+  google_rating: number
+  google_total_resenas: number
   plan: PlanTipo
   plan_vence_en: string | null
   verificado: boolean

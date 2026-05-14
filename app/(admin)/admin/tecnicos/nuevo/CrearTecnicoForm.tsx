@@ -5,13 +5,11 @@ import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { InputChips } from '@/components/dashboard/InputChips'
-import { createClient } from '@/lib/supabase/client'
 import type { Region, Categoria } from '@/types/database.types'
 
 export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[]; categorias: Categoria[] }) {
   const router = useRouter()
   const push = useToast(s => s.push)
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     nombre_empresa: '',
@@ -27,6 +25,12 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
     etiquetas: [] as string[],
     comunas_cobertura: [] as string[],
     email_propietario: '', // opcional: vincula a usuario existente o crea cuenta nueva
+    // Datos importados de Google (opcionales pero ÚTILES al cargar técnicos sin reseñas propias)
+    link_google_maps: '',
+    link_google_business: '',
+    google_rating: '',
+    google_total_resenas: '',
+    whatsapp: '',
   })
 
   function toggleCategoria(id: number) {
@@ -46,36 +50,44 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
       return
     }
     setLoading(true)
-    const { data: tecnico, error } = await supabase.from('tecnicos').insert({
-      // user_id = null (perfil sin dueño, listo para ser reclamado)
-      nombre_empresa: form.nombre_empresa,
-      nombre_contacto: form.nombre_contacto || null,
-      descripcion_corta: form.descripcion_corta || null,
-      telefono: form.telefono || null,
-      email_publico: form.email_publico || null,
-      sitio_web: form.sitio_web || null,
-      region_id: Number(form.region_id),
-      comuna: form.comuna || null,
-      direccion: form.direccion || null,
-      etiquetas: form.etiquetas.length ? form.etiquetas : null,
-      comunas_cobertura: form.comunas_cobertura.length ? form.comunas_cobertura : null,
-    }).select().single()
-    if (error || !tecnico) {
-      push(`Error: ${error?.message}`, 'error')
+    // Crear vía endpoint con pg directo (bypass schema cache de PostgREST)
+    const res = await fetch('/api/admin/tecnico/crear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre_empresa: form.nombre_empresa,
+        nombre_contacto: form.nombre_contacto,
+        descripcion_corta: form.descripcion_corta,
+        telefono: form.telefono,
+        whatsapp: form.whatsapp,
+        email_publico: form.email_publico,
+        sitio_web: form.sitio_web,
+        region_id: Number(form.region_id),
+        comuna: form.comuna,
+        direccion: form.direccion,
+        etiquetas: form.etiquetas,
+        comunas_cobertura: form.comunas_cobertura,
+        link_google_maps: form.link_google_maps,
+        link_google_business: form.link_google_business,
+        google_rating: form.google_rating,
+        google_total_resenas: form.google_total_resenas,
+        categoria_ids: form.categoria_ids,
+      }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Error desconocido' }))
+      push(`Error: ${err.error}`, 'error')
       setLoading(false)
       return
     }
-    // Categorías
-    for (const catId of form.categoria_ids) {
-      await supabase.from('tecnico_categorias').insert({ tecnico_id: tecnico.id, categoria_id: catId })
-    }
+    const { id: tecnicoId } = await res.json()
 
     // Si dio email del propietario, vincular cuenta
     if (form.email_propietario.trim()) {
       const vincRes = await fetch('/api/admin/vincular-usuario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tecnico_id: tecnico.id, email: form.email_propietario.trim() }),
+        body: JSON.stringify({ tecnico_id: tecnicoId, email: form.email_propietario.trim() }),
       })
       if (!vincRes.ok) {
         const err = await vincRes.json().catch(() => ({}))
@@ -104,8 +116,49 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
       <div className="card space-y-4">
         <h3 className="font-display text-lg text-azul font-bold">Contacto</h3>
         <Input label="Teléfono" value={form.telefono} onChange={e => setForm({ ...form, telefono: e.target.value })} placeholder="+56 9 1234 5678" />
+        <Input label="WhatsApp" value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })} placeholder="+56 9 1234 5678" helper="Si lo dejas vacío, se usa el teléfono general como WhatsApp" />
         <Input label="Email público" type="email" value={form.email_publico} onChange={e => setForm({ ...form, email_publico: e.target.value })} placeholder="contacto@empresa.cl" helper="Importante: si el técnico reclama el perfil después, este email se usará para verificar." />
         <Input label="Sitio web" value={form.sitio_web} onChange={e => setForm({ ...form, sitio_web: e.target.value })} placeholder="https://..." />
+      </div>
+
+      <div className="card space-y-3">
+        <h3 className="font-display text-lg text-azul font-bold">⭐ Reputación de Google (recomendado)</h3>
+        <p className="text-xs text-gris-3 -mt-2">
+          Si el técnico ya tiene reseñas en Google, ingrésalas aquí. Aparecerán en su perfil como prueba social mientras no tenga reseñas propias en SoloTécnicos.
+        </p>
+        <Input
+          label="Link Google Maps"
+          value={form.link_google_maps}
+          onChange={e => setForm({ ...form, link_google_maps: e.target.value })}
+          placeholder="https://maps.app.goo.gl/..."
+          helper="Busca el negocio en Google Maps → Compartir → Copiar link"
+        />
+        <Input
+          label="Link Google My Business (opcional)"
+          value={form.link_google_business}
+          onChange={e => setForm({ ...form, link_google_business: e.target.value })}
+          placeholder="https://g.co/kgs/..."
+        />
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Input
+            label="Rating en Google (0-5)"
+            type="number"
+            step="0.1"
+            min="0"
+            max="5"
+            value={form.google_rating}
+            onChange={e => setForm({ ...form, google_rating: e.target.value })}
+            placeholder="Ej: 4.7"
+          />
+          <Input
+            label="Cantidad de reseñas en Google"
+            type="number"
+            min="0"
+            value={form.google_total_resenas}
+            onChange={e => setForm({ ...form, google_total_resenas: e.target.value })}
+            placeholder="Ej: 132"
+          />
+        </div>
       </div>
 
       <div className="card space-y-4">

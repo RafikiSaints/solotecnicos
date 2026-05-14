@@ -36,9 +36,31 @@ export function ContactoCard({ tecnico }: { tecnico: Tecnico }) {
         </a>
       )}
 
-      {whatsappVisible && tecnico.whatsapp ? (
+      {/* WhatsApp: visible para TODOS los planes con mensaje predeterminado que promociona SoloTécnicos */}
+      {tecnico.whatsapp && (() => {
+        const mensaje = `¡Hola! Te encontré en SoloTécnicos.cl 👋\n\nMe interesa solicitar tus servicios. ¿Tienes disponibilidad para coordinar una visita o cotización?`
+        const waLink = `https://wa.me/${tecnico.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`
+        return (
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => registrarContacto('whatsapp')}
+            className="flex items-center gap-3 p-3 rounded-md border-2 border-verde/30 bg-verde/5 hover:bg-verde/10 transition-colors"
+          >
+            <MessageCircle size={18} className="text-verde" />
+            <div className="flex-1">
+              <div className="text-xs text-verde font-semibold">WhatsApp</div>
+              <div className="font-semibold text-azul">{tecnico.whatsapp}</div>
+            </div>
+          </a>
+        )
+      })()}
+
+      {/* Si no hay WhatsApp y técnico es gratis, sugerir agregar uno */}
+      {!tecnico.whatsapp && tecnico.telefono && (
         <a
-          href={`https://wa.me/${tecnico.whatsapp.replace(/\D/g, '')}`}
+          href={`https://wa.me/${tecnico.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(`¡Hola! Te encontré en SoloTécnicos.cl 👋 Me interesa solicitar tus servicios. ¿Tienes disponibilidad?`)}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => registrarContacto('whatsapp')}
@@ -46,16 +68,11 @@ export function ContactoCard({ tecnico }: { tecnico: Tecnico }) {
         >
           <MessageCircle size={18} className="text-verde" />
           <div className="flex-1">
-            <div className="text-xs text-verde font-semibold">WhatsApp</div>
-            <div className="font-semibold text-azul">{tecnico.whatsapp}</div>
+            <div className="text-xs text-verde font-semibold">Enviar WhatsApp al teléfono</div>
+            <div className="font-medium text-azul text-sm">{tecnico.telefono}</div>
           </div>
         </a>
-      ) : tecnico.whatsapp ? (
-        <div className="flex items-center gap-3 p-3 rounded-md border border-borde bg-papel/50 text-gris-3 text-sm">
-          <Lock size={16} />
-          <span>WhatsApp solo visible para técnicos PRO</span>
-        </div>
-      ) : null}
+      )}
 
       {tecnico.email_publico && (
         <a

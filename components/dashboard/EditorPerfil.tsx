@@ -30,38 +30,52 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
   const [svcs, setSvcs] = useState<Servicio[]>(servicios)
   const [saving, setSaving] = useState(false)
 
-  // Auto-save con debounce
+  // Auto-save con debounce — usa endpoint /api/tecnico/actualizar (pg directo, bypass schema cache)
   useEffect(() => {
     if (JSON.stringify(form) === JSON.stringify(tecnico)) return
     const id = setTimeout(async () => {
       setSaving(true)
-      const { error } = await supabase.from('tecnicos').update({
-        nombre_empresa: form.nombre_empresa,
-        nombre_contacto: form.nombre_contacto,
-        descripcion: form.descripcion,
-        descripcion_corta: form.descripcion_corta,
-        region_id: form.region_id,
-        comuna: form.comuna,
-        direccion: form.direccion,
-        lat: form.lat,
-        lng: form.lng,
-        comunas_cobertura: form.comunas_cobertura,
-        etiquetas: form.etiquetas,
-        telefono: form.telefono,
-        whatsapp: form.whatsapp,
-        email_publico: form.email_publico,
-        sitio_web: form.sitio_web,
-        link_google_maps: form.link_google_maps,
-        link_google_business: form.link_google_business,
-        sucursales_texto: form.sucursales_texto,
-        video_url: form.video_url,
-        horarios: form.horarios,
-        atiende_24h: form.atiende_24h,
-        atiende_domicilio: form.atiende_domicilio,
-      }).eq('id', tecnico.id)
-      setSaving(false)
-      if (!error) push('Cambios guardados')
-      else push('Error al guardar', 'error')
+      try {
+        const res = await fetch('/api/tecnico/actualizar', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre_empresa: form.nombre_empresa,
+            nombre_contacto: form.nombre_contacto,
+            descripcion: form.descripcion,
+            descripcion_corta: form.descripcion_corta,
+            region_id: form.region_id,
+            comuna: form.comuna,
+            direccion: form.direccion,
+            lat: form.lat,
+            lng: form.lng,
+            comunas_cobertura: form.comunas_cobertura,
+            etiquetas: form.etiquetas,
+            telefono: form.telefono,
+            whatsapp: form.whatsapp,
+            email_publico: form.email_publico,
+            sitio_web: form.sitio_web,
+            link_google_maps: form.link_google_maps,
+            link_google_business: form.link_google_business,
+            google_rating: (form as any).google_rating ?? null,
+            google_total_resenas: (form as any).google_total_resenas ?? null,
+            sucursales_texto: form.sucursales_texto,
+            video_url: form.video_url,
+            horarios: form.horarios,
+            atiende_24h: form.atiende_24h,
+            atiende_domicilio: form.atiende_domicilio,
+          }),
+        })
+        setSaving(false)
+        if (res.ok) push('Cambios guardados')
+        else {
+          const { error } = await res.json().catch(() => ({ error: 'Error desconocido' }))
+          push(`Error al guardar: ${error}`, 'error')
+        }
+      } catch (e: any) {
+        setSaving(false)
+        push(`Error al guardar: ${e.message}`, 'error')
+      }
     }, 1500)
     return () => clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,6 +221,37 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
           placeholder="https://g.co/kgs/..."
           helper="Tu perfil de empresa en Google. Aumenta la confianza de los clientes."
         />
+
+        {/* Importar rating de Google */}
+        <div className="rounded-md bg-azul-mid/5 border border-azul-mid/20 p-3 space-y-3">
+          <div>
+            <strong className="text-azul text-sm">⭐ Reputación de Google</strong>
+            <p className="text-xs text-gris-3 mt-0.5">
+              Muestra tu rating actual de Google en tu perfil mientras no tengas reseñas aquí. Suma confianza.
+              <br /><strong>Cómo encontrarlo:</strong> busca tu negocio en Google Maps → mira la estrella y el número de reseñas.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Input
+              label="Rating en Google (0-5)"
+              type="number"
+              step="0.1"
+              min="0"
+              max="5"
+              value={(form as any).google_rating || ''}
+              onChange={e => setForm({ ...form, google_rating: e.target.value ? parseFloat(e.target.value) : 0 } as any)}
+              placeholder="4.8"
+            />
+            <Input
+              label="Cantidad de reseñas"
+              type="number"
+              min="0"
+              value={(form as any).google_total_resenas || ''}
+              onChange={e => setForm({ ...form, google_total_resenas: e.target.value ? parseInt(e.target.value) : 0 } as any)}
+              placeholder="132"
+            />
+          </div>
+        </div>
       </Seccion>
 
       {/* VIDEO PROMOCIONAL (solo Elite) */}
