@@ -57,8 +57,6 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
             sitio_web: form.sitio_web,
             link_google_maps: form.link_google_maps,
             link_google_business: form.link_google_business,
-            google_rating: (form as any).google_rating ?? null,
-            google_total_resenas: (form as any).google_total_resenas ?? null,
             sucursales_texto: form.sucursales_texto,
             video_url: form.video_url,
             horarios: form.horarios,
@@ -222,36 +220,26 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
           helper="Tu perfil de empresa en Google. Aumenta la confianza de los clientes."
         />
 
-        {/* Importar rating de Google */}
-        <div className="rounded-md bg-azul-mid/5 border border-azul-mid/20 p-3 space-y-3">
-          <div>
-            <strong className="text-azul text-sm">⭐ Reputación de Google</strong>
-            <p className="text-xs text-gris-3 mt-0.5">
-              Muestra tu rating actual de Google en tu perfil mientras no tengas reseñas aquí. Suma confianza.
-              <br /><strong>Cómo encontrarlo:</strong> busca tu negocio en Google Maps → mira la estrella y el número de reseñas.
+        {/* Rating actual (solo visualización — lo configura el admin) */}
+        {((tecnico as any).google_rating > 0 || (tecnico as any).google_total_resenas > 0) ? (
+          <div className="rounded-md bg-azul-mid/5 border border-azul-mid/20 p-3">
+            <strong className="text-azul text-sm">⭐ Tu reputación en Google</strong>
+            <div className="mt-2 flex items-center gap-3 text-sm">
+              <span className="font-display text-2xl font-bold text-azul">{((tecnico as any).google_rating || 0).toFixed(1)}</span>
+              <span className="text-gris-4">⭐ {((tecnico as any).google_total_resenas || 0)} reseñas</span>
+            </div>
+            <p className="text-[11px] text-gris-3 mt-2">
+              Estos datos los carga el equipo de SoloTécnicos a partir de tu link de Google Maps. Si están desactualizados o quieres modificarlos, escríbenos a contacto@solotecnicos.cl.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Input
-              label="Rating en Google (0-5)"
-              type="number"
-              step="0.1"
-              min="0"
-              max="5"
-              value={(form as any).google_rating || ''}
-              onChange={e => setForm({ ...form, google_rating: e.target.value ? parseFloat(e.target.value) : 0 } as any)}
-              placeholder="4.8"
-            />
-            <Input
-              label="Cantidad de reseñas"
-              type="number"
-              min="0"
-              value={(form as any).google_total_resenas || ''}
-              onChange={e => setForm({ ...form, google_total_resenas: e.target.value ? parseInt(e.target.value) : 0 } as any)}
-              placeholder="132"
-            />
+        ) : (
+          <div className="rounded-md bg-azul-mid/5 border border-azul-mid/20 p-3">
+            <strong className="text-azul text-sm">⭐ Reputación de Google</strong>
+            <p className="text-xs text-gris-3 mt-1">
+              Si tu negocio tiene reseñas en Google, el equipo de SoloTécnicos las importa a tu perfil para sumar confianza mientras no tengas reseñas propias aquí. Asegúrate de pegar bien tu link de Google Maps arriba — nosotros nos encargamos del resto.
+            </p>
           </div>
-        </div>
+        )}
       </Seccion>
 
       {/* VIDEO PROMOCIONAL (solo Elite) */}

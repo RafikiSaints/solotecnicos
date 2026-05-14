@@ -14,7 +14,8 @@ export async function PATCH(req: Request) {
 
     const body = await req.json()
 
-    // Whitelist de campos editables por el técnico
+    // Whitelist de campos editables por el técnico.
+    // OJO: google_rating y google_total_resenas NO están permitidos (solo admin).
     const allowed: Record<string, any> = {}
     const FIELDS = [
       'nombre_empresa', 'nombre_contacto', 'descripcion', 'descripcion_corta',
@@ -22,7 +23,6 @@ export async function PATCH(req: Request) {
       'comunas_cobertura', 'etiquetas', 'sucursales_texto', 'video_url',
       'telefono', 'whatsapp', 'email_publico', 'sitio_web',
       'link_google_maps', 'link_google_business',
-      'google_rating', 'google_total_resenas',
       'horarios', 'atiende_24h', 'atiende_domicilio',
     ]
     for (const k of FIELDS) {
@@ -33,9 +33,9 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Sin cambios' }, { status: 400 })
     }
 
-    // Verificar que el técnico pertenece al usuario
+    // Verificar que el técnico pertenece al usuario (cast explícito a uuid)
     const owner = await sql`
-      SELECT id FROM tecnicos WHERE user_id = ${user.id} LIMIT 1
+      SELECT id FROM tecnicos WHERE user_id = ${user.id}::uuid LIMIT 1
     `
     if (owner.length === 0) {
       return NextResponse.json({ error: 'Sin perfil de técnico' }, { status: 403 })
@@ -44,7 +44,7 @@ export async function PATCH(req: Request) {
     const result = await sql`
       UPDATE tecnicos
       SET ${sql(allowed)}, updated_at = now()
-      WHERE user_id = ${user.id}
+      WHERE user_id = ${user.id}::uuid
       RETURNING id
     `
 

@@ -23,13 +23,13 @@ export async function DELETE(req: Request) {
     const { id } = await req.json()
     if (!id) return NextResponse.json({ error: 'Falta id' }, { status: 400 })
 
-    // Buscar nombre antes de borrar (para log)
-    const rows = await sql`SELECT nombre_empresa FROM tecnicos WHERE id = ${id} LIMIT 1`
+    // Buscar nombre antes de borrar (para log). Cast explícito a uuid.
+    const rows = await sql`SELECT nombre_empresa FROM tecnicos WHERE id = ${id}::uuid LIMIT 1`
     if (rows.length === 0) {
       return NextResponse.json({ error: 'Técnico no encontrado' }, { status: 404 })
     }
 
-    await sql`DELETE FROM tecnicos WHERE id = ${id}`
+    await sql`DELETE FROM tecnicos WHERE id = ${id}::uuid`
     console.log(`[admin/tecnico/eliminar] borrado: ${rows[0].nombre_empresa} (${id})`)
 
     return NextResponse.json({ ok: true })
