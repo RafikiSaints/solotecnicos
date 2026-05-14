@@ -15,6 +15,11 @@ export function HorarioDisplay({ horarios, atiende24h }: { horarios: Horarios | 
     )
   }
   if (!horarios) return null
+  // Si TODOS los días están cerrados (técnico no configuró horario aún), no
+  // mostramos la tarjeta. Cuando reclame el perfil y agregue su horario,
+  // aparecerá automáticamente.
+  const tieneAlgunDiaAbierto = DIAS_SEMANA.some(d => horarios[d.key]?.abierto)
+  if (!tieneAlgunDiaAbierto) return null
   const abierto = estaAbiertoAhora(horarios)
   const today = new Date().getDay()
   const todayIdx = today === 0 ? 6 : today - 1 // map sunday → 6

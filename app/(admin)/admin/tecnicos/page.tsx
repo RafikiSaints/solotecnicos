@@ -9,9 +9,10 @@ export const revalidate = 0
 
 export default async function AdminTecnicos() {
   const sb = createServiceClient()
-  const { data: tecnicos } = await sb.from('tecnicos')
-    .select('id, slug, user_id, nombre_empresa, nombre_contacto, comuna, plan, plan_vence_en, verificado, activo, destacado, rating_promedio, total_resenas, telefono, email_publico, link_google_maps, link_google_business, google_rating, google_total_resenas, created_at, region_id, regiones(nombre)')
-    .order('created_at', { ascending: false })
+  const [{ data: tecnicos }, { data: regiones }] = await Promise.all([
+    sb.from('tecnicos').select('*, regiones(nombre)').order('created_at', { ascending: false }),
+    sb.from('regiones').select('*').order('orden'),
+  ])
 
   const huerfanos = (tecnicos || []).filter((t: any) => !t.user_id).length
 
@@ -29,7 +30,7 @@ export default async function AdminTecnicos() {
           <Button><Plus size={14} /> Crear técnico</Button>
         </Link>
       </div>
-      <TecnicosTable tecnicos={(tecnicos || []) as any} />
+      <TecnicosTable tecnicos={(tecnicos || []) as any} regiones={(regiones || []) as any} />
     </div>
   )
 }

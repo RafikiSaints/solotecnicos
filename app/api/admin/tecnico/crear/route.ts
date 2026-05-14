@@ -34,6 +34,9 @@ export async function POST(req: Request) {
       link_google_business: body.link_google_business || null,
       google_rating: body.google_rating != null && body.google_rating !== '' ? Number(body.google_rating) : null,
       google_total_resenas: body.google_total_resenas != null && body.google_total_resenas !== '' ? parseInt(body.google_total_resenas) : null,
+      atiende_24h: !!body.atiende_24h,
+      atiende_domicilio: !!body.atiende_domicilio,
+      ...(body.horarios ? { horarios: body.horarios } : {}),
     }
 
     if (!data.nombre_empresa || !data.region_id) {

@@ -5,7 +5,8 @@ import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { InputChips } from '@/components/dashboard/InputChips'
-import type { Region, Categoria } from '@/types/database.types'
+import { HorarioPicker, HORARIOS_VACIOS } from '@/components/dashboard/HorarioPicker'
+import type { Region, Categoria, Horarios } from '@/types/database.types'
 
 export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[]; categorias: Categoria[] }) {
   const router = useRouter()
@@ -31,6 +32,10 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
     google_rating: '',
     google_total_resenas: '',
     whatsapp: '',
+    // Horario — opcional; si todo queda en false, no se muestra en el perfil público
+    atiende_24h: false,
+    atiende_domicilio: false,
+    horarios: HORARIOS_VACIOS as Horarios,
   })
 
   function toggleCategoria(id: number) {
@@ -72,6 +77,9 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
         google_rating: form.google_rating,
         google_total_resenas: form.google_total_resenas,
         categoria_ids: form.categoria_ids,
+        atiende_24h: form.atiende_24h,
+        atiende_domicilio: form.atiende_domicilio,
+        horarios: form.horarios,
       }),
     })
     if (!res.ok) {
@@ -203,6 +211,23 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
           values={form.comunas_cobertura}
           onChange={v => setForm({ ...form, comunas_cobertura: v })}
           placeholder="Las Condes, Vitacura, Providencia..."
+        />
+      </div>
+
+      <div className="card space-y-3">
+        <h3 className="font-display text-lg text-azul font-bold">🕒 Horario de atención (opcional)</h3>
+        <p className="text-xs text-gris-3 -mt-2">
+          Si no defines horario, no se mostrará en el perfil — el técnico lo podrá agregar cuando reclame su cuenta.
+        </p>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={form.atiende_domicilio} onChange={e => setForm({ ...form, atiende_domicilio: e.target.checked })} />
+          <span className="text-sm">🚐 Atiende a domicilio</span>
+        </label>
+        <HorarioPicker
+          horarios={form.horarios}
+          onChange={h => setForm({ ...form, horarios: h })}
+          atiende24h={form.atiende_24h}
+          onToggle24h={v => setForm({ ...form, atiende_24h: v })}
         />
       </div>
 

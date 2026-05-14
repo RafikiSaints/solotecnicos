@@ -6,11 +6,14 @@ import { TablaPaginada } from '@/components/ui/TablaPaginada'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { Input, Select } from '@/components/ui/Input'
+import { Input, Select, Textarea } from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { formatearFecha } from '@/lib/utils'
 import { planVigente } from '@/lib/planes'
+import { InputChips } from '@/components/dashboard/InputChips'
+import { HorarioPicker, HORARIOS_VACIOS } from '@/components/dashboard/HorarioPicker'
+import type { Region } from '@/types/database.types'
 
 interface TecnicoAdmin {
   id: string
@@ -18,7 +21,11 @@ interface TecnicoAdmin {
   user_id: string | null
   nombre_empresa: string
   nombre_contacto: string | null
+  descripcion_corta: string | null
+  descripcion: string | null
+  region_id: number | null
   comuna: string | null
+  direccion: string | null
   plan: 'gratis' | 'pro' | 'elite'
   plan_vence_en: string | null
   verificado: boolean
@@ -27,16 +34,25 @@ interface TecnicoAdmin {
   rating_promedio: number
   total_resenas: number
   telefono: string | null
+  whatsapp: string | null
   email_publico: string | null
+  sitio_web: string | null
   link_google_maps: string | null
   link_google_business: string | null
   google_rating: number | null
   google_total_resenas: number | null
+  etiquetas: string[] | null
+  comunas_cobertura: string[] | null
+  sucursales_texto: string | null
+  video_url: string | null
+  atiende_24h: boolean | null
+  atiende_domicilio: boolean | null
+  horarios: any
   created_at: string
   regiones?: { nombre: string } | null
 }
 
-export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
+export function TecnicosTable({ tecnicos: ini, regiones = [] }: { tecnicos: TecnicoAdmin[]; regiones?: Region[] }) {
   const [tecnicos, setTecnicos] = useState(ini)
   const [editando, setEditando] = useState<TecnicoAdmin | null>(null)
   const [filtroPlan, setFiltroPlan] = useState<string>('todos')
@@ -221,9 +237,9 @@ export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
         {editando && (
           <EditarTecnicoForm
             tecnico={editando}
+            regiones={regiones}
             onSave={guardarCambios}
             onCancel={() => setEditando(null)}
-            onToggleActivo={() => toggleActivo(editando.id, editando.activo)}
             onUserUpdated={(newUserId) => {
               setTecnicos(tecnicos.map(t => t.id === editando.id ? { ...t, user_id: newUserId } : t))
               setEditando({ ...editando, user_id: newUserId })
@@ -235,14 +251,32 @@ export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
   )
 }
 
-function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo, onUserUpdated }: {
+function EditarTecnicoForm({ tecnico, regiones, onSave, onCancel, onUserUpdated }: {
   tecnico: TecnicoAdmin
+  regiones: Region[]
   onSave: (u: any) => void
   onCancel: () => void
-  onToggleActivo: () => void
   onUserUpdated: (newUserId: string | null) => void
 }) {
   const [form, setForm] = useState({
+    nombre_empresa: tecnico.nombre_empresa || '',
+    nombre_contacto: tecnico.nombre_contacto || '',
+    descripcion_corta: tecnico.descripcion_corta || '',
+    descripcion: tecnico.descripcion || '',
+    region_id: tecnico.region_id != null ? String(tecnico.region_id) : '',
+    comuna: tecnico.comuna || '',
+    direccion: tecnico.direccion || '',
+    telefono: tecnico.telefono || '',
+    whatsapp: tecnico.whatsapp || '',
+    email_publico: tecnico.email_publico || '',
+    sitio_web: tecnico.sitio_web || '',
+    etiquetas: tecnico.etiquetas || [],
+    comunas_cobertura: tecnico.comunas_cobertura || [],
+    sucursales_texto: tecnico.sucursales_texto || '',
+    video_url: tecnico.video_url || '',
+    atiende_24h: !!tecnico.atiende_24h,
+    atiende_domicilio: !!tecnico.atiende_domicilio,
+    horarios: (tecnico.horarios as any) || HORARIOS_VACIOS,
     plan: tecnico.plan,
     plan_vence_en: tecnico.plan_vence_en?.slice(0, 10) || '',
     verificado: tecnico.verificado,
@@ -260,6 +294,24 @@ function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo, onUserUp
   function submit(e: React.FormEvent) {
     e.preventDefault()
     onSave({
+      nombre_empresa: form.nombre_empresa.trim(),
+      nombre_contacto: form.nombre_contacto.trim() || null,
+      descripcion_corta: form.descripcion_corta.trim() || null,
+      descripcion: form.descripcion.trim() || null,
+      region_id: form.region_id ? Number(form.region_id) : null,
+      comuna: form.comuna.trim() || null,
+      direccion: form.direccion.trim() || null,
+      telefono: form.telefono.trim() || null,
+      whatsapp: form.whatsapp.trim() || null,
+      email_publico: form.email_publico.trim() || null,
+      sitio_web: form.sitio_web.trim() || null,
+      etiquetas: form.etiquetas.length ? form.etiquetas : null,
+      comunas_cobertura: form.comunas_cobertura.length ? form.comunas_cobertura : null,
+      sucursales_texto: form.sucursales_texto.trim() || null,
+      video_url: form.video_url.trim() || null,
+      atiende_24h: form.atiende_24h,
+      atiende_domicilio: form.atiende_domicilio,
+      horarios: form.horarios,
       plan: form.plan,
       plan_vence_en: form.plan_vence_en ? new Date(form.plan_vence_en).toISOString() : null,
       verificado: form.verificado,
@@ -312,36 +364,148 @@ function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo, onUserUp
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <div className="grid sm:grid-cols-2 gap-3">
-        <Select label="Plan" value={form.plan} onChange={e => setForm({ ...form, plan: e.target.value as any })}>
-          <option value="gratis">Gratis</option>
-          <option value="pro">PRO</option>
-          <option value="elite">Elite</option>
-        </Select>
-        <Input
-          label="Plan vence el"
-          type="date"
-          value={form.plan_vence_en}
-          onChange={e => setForm({ ...form, plan_vence_en: e.target.value })}
-          helper={form.plan === 'gratis' ? 'Sin uso para plan gratis' : 'Después de esta fecha vuelve a gratis'}
-        />
-      </div>
+    <form onSubmit={submit} className="space-y-5">
+      {/* INFO BÁSICA */}
+      <details open className="rounded-md border-2 border-borde p-3">
+        <summary className="cursor-pointer font-display text-sm text-azul font-bold mb-2">📝 Información básica</summary>
+        <div className="space-y-3 mt-3">
+          <Input
+            label="Nombre de la empresa *"
+            required
+            value={form.nombre_empresa}
+            onChange={e => setForm({ ...form, nombre_empresa: e.target.value })}
+          />
+          <Input
+            label="Nombre del contacto"
+            value={form.nombre_contacto}
+            onChange={e => setForm({ ...form, nombre_contacto: e.target.value })}
+            placeholder="Juan Pérez"
+          />
+          <Textarea
+            label="Descripción corta (máx 160 chars)"
+            maxLength={160}
+            value={form.descripcion_corta}
+            onChange={e => setForm({ ...form, descripcion_corta: e.target.value })}
+          />
+          <Textarea
+            label="Descripción larga"
+            rows={3}
+            value={form.descripcion}
+            onChange={e => setForm({ ...form, descripcion: e.target.value })}
+          />
+        </div>
+      </details>
 
-      <div className="space-y-2">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={form.verificado} onChange={e => setForm({ ...form, verificado: e.target.checked })} />
-          <span className="text-sm">✓ Técnico verificado (badge azul en perfil)</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={form.destacado} onChange={e => setForm({ ...form, destacado: e.target.checked })} />
-          <span className="text-sm">⭐ Destacado en home (aparece en sección "destacados")</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={form.activo} onChange={e => setForm({ ...form, activo: e.target.checked })} />
-          <span className="text-sm">🟢 Cuenta activa (visible al público)</span>
-        </label>
-      </div>
+      {/* CONTACTO */}
+      <details className="rounded-md border-2 border-borde p-3">
+        <summary className="cursor-pointer font-display text-sm text-azul font-bold">📞 Contacto</summary>
+        <div className="space-y-3 mt-3">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Input label="Teléfono" value={form.telefono} onChange={e => setForm({ ...form, telefono: e.target.value })} placeholder="+56 9 1234 5678" />
+            <Input label="WhatsApp" value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })} placeholder="+56 9 1234 5678" />
+          </div>
+          <Input label="Email público" type="email" value={form.email_publico} onChange={e => setForm({ ...form, email_publico: e.target.value })} placeholder="contacto@empresa.cl" />
+          <Input label="Sitio web" value={form.sitio_web} onChange={e => setForm({ ...form, sitio_web: e.target.value })} placeholder="https://..." />
+        </div>
+      </details>
+
+      {/* UBICACIÓN */}
+      <details className="rounded-md border-2 border-borde p-3">
+        <summary className="cursor-pointer font-display text-sm text-azul font-bold">📍 Ubicación</summary>
+        <div className="space-y-3 mt-3">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Select label="Región" value={form.region_id} onChange={e => setForm({ ...form, region_id: e.target.value })}>
+              <option value="">Sin región</option>
+              {regiones.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            </Select>
+            <Input label="Comuna" value={form.comuna} onChange={e => setForm({ ...form, comuna: e.target.value })} />
+          </div>
+          <Input label="Dirección" value={form.direccion} onChange={e => setForm({ ...form, direccion: e.target.value })} />
+          <InputChips
+            label="Comunas de cobertura (servicio a domicilio)"
+            values={form.comunas_cobertura}
+            onChange={v => setForm({ ...form, comunas_cobertura: v })}
+            placeholder="Las Condes, Vitacura..."
+          />
+        </div>
+      </details>
+
+      {/* ETIQUETAS / SERVICIOS */}
+      <details className="rounded-md border-2 border-borde p-3">
+        <summary className="cursor-pointer font-display text-sm text-azul font-bold">🏷️ Etiquetas y extras</summary>
+        <div className="space-y-3 mt-3">
+          <InputChips
+            label="Etiquetas (palabras clave de búsqueda)"
+            values={form.etiquetas}
+            onChange={v => setForm({ ...form, etiquetas: v })}
+            placeholder="Samsung, lavadoras, climatización..."
+          />
+          <Textarea
+            label="Sucursales (texto libre, PRO/Elite)"
+            value={form.sucursales_texto}
+            onChange={e => setForm({ ...form, sucursales_texto: e.target.value })}
+            placeholder="Sucursal Las Condes, Sucursal Maipú..."
+          />
+          <Input
+            label="URL Video promocional (Elite)"
+            value={form.video_url}
+            onChange={e => setForm({ ...form, video_url: e.target.value })}
+            placeholder="https://youtube.com/watch?v=..."
+          />
+        </div>
+      </details>
+
+      {/* HORARIO */}
+      <details className="rounded-md border-2 border-borde p-3">
+        <summary className="cursor-pointer font-display text-sm text-azul font-bold">🕒 Horario de atención</summary>
+        <div className="mt-3 space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={form.atiende_domicilio} onChange={e => setForm({ ...form, atiende_domicilio: e.target.checked })} />
+            <span className="text-sm">🚐 Atiende a domicilio</span>
+          </label>
+          <HorarioPicker
+            horarios={form.horarios}
+            onChange={h => setForm({ ...form, horarios: h })}
+            atiende24h={form.atiende_24h}
+            onToggle24h={v => setForm({ ...form, atiende_24h: v })}
+          />
+        </div>
+      </details>
+
+      {/* PLAN + FLAGS */}
+      <details open className="rounded-md border-2 border-azul-mid/30 bg-azul-mid/5 p-3">
+        <summary className="cursor-pointer font-display text-sm text-azul font-bold">🎟️ Plan y visibilidad</summary>
+        <div className="space-y-3 mt-3">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Select label="Plan" value={form.plan} onChange={e => setForm({ ...form, plan: e.target.value as any })}>
+              <option value="gratis">Gratis</option>
+              <option value="pro">PRO</option>
+              <option value="elite">Elite</option>
+            </Select>
+            <Input
+              label="Plan vence el"
+              type="date"
+              value={form.plan_vence_en}
+              onChange={e => setForm({ ...form, plan_vence_en: e.target.value })}
+              helper={form.plan === 'gratis' ? 'Sin uso para plan gratis' : 'Después vuelve a gratis'}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.verificado} onChange={e => setForm({ ...form, verificado: e.target.checked })} />
+              <span className="text-sm">✓ Técnico verificado (badge azul en perfil)</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.destacado} onChange={e => setForm({ ...form, destacado: e.target.checked })} />
+              <span className="text-sm">⭐ Destacado en home (sección destacados)</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.activo} onChange={e => setForm({ ...form, activo: e.target.checked })} />
+              <span className="text-sm">🟢 Cuenta activa (visible al público)</span>
+            </label>
+          </div>
+        </div>
+      </details>
 
       {/* SECCIÓN PROPIETARIO */}
       <div className="rounded-md border-2 border-azul-mid/20 bg-azul-mid/5 p-3 space-y-3">
