@@ -38,7 +38,7 @@ export function ContactoCard({ tecnico }: { tecnico: Tecnico }) {
 
       {/* WhatsApp: visible para TODOS los planes con mensaje predeterminado que promociona SoloTécnicos */}
       {tecnico.whatsapp && (() => {
-        const mensaje = `¡Hola! Te encontré en SoloTécnicos.cl 👋\n\nMe interesa solicitar tus servicios. ¿Tienes disponibilidad para coordinar una visita o cotización?`
+        const mensaje = `¡Hola! Te encontré en Solotecnicos.cl 👋\n\nMe interesa solicitar tus servicios. ¿Tienes disponibilidad para coordinar una visita o cotización?`
         const waLink = `https://wa.me/${tecnico.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`
         return (
           <a
@@ -60,7 +60,7 @@ export function ContactoCard({ tecnico }: { tecnico: Tecnico }) {
       {/* Si no hay WhatsApp y técnico es gratis, sugerir agregar uno */}
       {!tecnico.whatsapp && tecnico.telefono && (
         <a
-          href={`https://wa.me/${tecnico.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(`¡Hola! Te encontré en SoloTécnicos.cl 👋 Me interesa solicitar tus servicios. ¿Tienes disponibilidad?`)}`}
+          href={`https://wa.me/${tecnico.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(`¡Hola! Te encontré en Solotecnicos.cl 👋 Me interesa solicitar tus servicios. ¿Tienes disponibilidad?`)}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => registrarContacto('whatsapp')}
@@ -68,7 +68,7 @@ export function ContactoCard({ tecnico }: { tecnico: Tecnico }) {
         >
           <MessageCircle size={18} className="text-verde" />
           <div className="flex-1">
-            <div className="text-xs text-verde font-semibold">Enviar WhatsApp al teléfono</div>
+            <div className="text-xs text-verde font-semibold">Enviar WhatsApp al técnico</div>
             <div className="font-medium text-azul text-sm">{tecnico.telefono}</div>
           </div>
         </a>
