@@ -10,7 +10,7 @@ export const revalidate = 0
 export default async function AdminTecnicos() {
   const sb = createServiceClient()
   const { data: tecnicos } = await sb.from('tecnicos')
-    .select('id, slug, user_id, nombre_empresa, nombre_contacto, comuna, plan, plan_vence_en, verificado, activo, destacado, rating_promedio, total_resenas, telefono, email_publico, created_at, region_id, regiones(nombre)')
+    .select('id, slug, user_id, nombre_empresa, nombre_contacto, comuna, plan, plan_vence_en, verificado, activo, destacado, rating_promedio, total_resenas, telefono, email_publico, link_google_maps, link_google_business, google_rating, google_total_resenas, created_at, region_id, regiones(nombre)')
     .order('created_at', { ascending: false })
 
   const huerfanos = (tecnicos || []).filter((t: any) => !t.user_id).length

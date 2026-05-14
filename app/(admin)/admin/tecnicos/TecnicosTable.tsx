@@ -28,6 +28,10 @@ interface TecnicoAdmin {
   total_resenas: number
   telefono: string | null
   email_publico: string | null
+  link_google_maps: string | null
+  link_google_business: string | null
+  google_rating: number | null
+  google_total_resenas: number | null
   created_at: string
   regiones?: { nombre: string } | null
 }
@@ -49,8 +53,17 @@ export function TecnicosTable({ tecnicos: ini }: { tecnicos: TecnicoAdmin[] }) {
 
   async function guardarCambios(updates: Partial<TecnicoAdmin>) {
     if (!editando) return
-    const { error } = await supabase.from('tecnicos').update(updates).eq('id', editando.id)
-    if (error) { push(`Error: ${error.message}`, 'error'); return }
+    // Usa endpoint admin con pg directo (bypass schema cache de PostgREST)
+    const res = await fetch('/api/admin/tecnico/actualizar', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tecnico_id: editando.id, ...updates }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      push(`Error: ${err.error || 'No se pudo guardar'}`, 'error')
+      return
+    }
     setTecnicos(tecnicos.map(t => t.id === editando.id ? { ...t, ...updates } : t))
     push('Técnico actualizado')
     setEditando(null)
@@ -235,6 +248,10 @@ function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo, onUserUp
     verificado: tecnico.verificado,
     destacado: tecnico.destacado,
     activo: tecnico.activo,
+    link_google_maps: tecnico.link_google_maps || '',
+    link_google_business: tecnico.link_google_business || '',
+    google_rating: tecnico.google_rating != null ? String(tecnico.google_rating) : '',
+    google_total_resenas: tecnico.google_total_resenas != null ? String(tecnico.google_total_resenas) : '',
   })
   const [emailVincular, setEmailVincular] = useState('')
   const [vinculando, setVinculando] = useState(false)
@@ -248,6 +265,10 @@ function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo, onUserUp
       verificado: form.verificado,
       destacado: form.destacado,
       activo: form.activo,
+      link_google_maps: form.link_google_maps.trim() || null,
+      link_google_business: form.link_google_business.trim() || null,
+      google_rating: form.google_rating ? parseFloat(form.google_rating) : null,
+      google_total_resenas: form.google_total_resenas ? parseInt(form.google_total_resenas) : null,
     })
   }
 
@@ -362,6 +383,48 @@ function EditarTecnicoForm({ tecnico, onSave, onCancel, onToggleActivo, onUserUp
             </p>
           </>
         )}
+      </div>
+
+      {/* SECCIÓN GOOGLE — solo admin puede editar */}
+      <div className="rounded-md border-2 border-oro/30 bg-oro/5 p-3 space-y-3">
+        <h4 className="font-display text-sm text-azul font-bold flex items-center gap-2">
+          ⭐ Reputación de Google
+        </h4>
+        <Input
+          label="Link Google Maps"
+          value={form.link_google_maps}
+          onChange={e => setForm({ ...form, link_google_maps: e.target.value })}
+          placeholder="https://maps.app.goo.gl/..."
+        />
+        <Input
+          label="Link Google My Business"
+          value={form.link_google_business}
+          onChange={e => setForm({ ...form, link_google_business: e.target.value })}
+          placeholder="https://g.co/kgs/..."
+        />
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Input
+            label="Rating Google (0-5)"
+            type="number"
+            step="0.1"
+            min="0"
+            max="5"
+            value={form.google_rating}
+            onChange={e => setForm({ ...form, google_rating: e.target.value })}
+            placeholder="4.7"
+          />
+          <Input
+            label="Total reseñas Google"
+            type="number"
+            min="0"
+            value={form.google_total_resenas}
+            onChange={e => setForm({ ...form, google_total_resenas: e.target.value })}
+            placeholder="132"
+          />
+        </div>
+        <p className="text-[11px] text-gris-3">
+          El técnico no puede editar estos valores — solo admin. Aparecen como prueba social en su perfil hasta que tenga reseñas propias.
+        </p>
       </div>
 
       <div className="rounded-md bg-papel p-3 text-xs text-gris-4">

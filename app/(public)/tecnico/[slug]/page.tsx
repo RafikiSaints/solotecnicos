@@ -19,7 +19,22 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function PerfilPage({ params }: { params: { slug: string } }) {
   const sb = createClient()
 
-  const { data: tecnico } = await sb.from('tecnicos').select('*').eq('slug', params.slug).eq('activo', true).single()
+  // Cargamos el técnico vía pg directo para evitar problemas de schema cache
+  // de PostgREST con columnas nuevas (google_rating, google_total_resenas, etc.)
+  let tecnico: any = null
+  try {
+    const { sql } = await import('@/lib/pg')
+    const rows = await sql`
+      SELECT * FROM tecnicos
+      WHERE slug = ${params.slug} AND activo = true
+      LIMIT 1
+    `
+    tecnico = rows[0] || null
+  } catch (e) {
+    console.warn('[tecnico/slug] pg directo falló, usando Supabase JS:', (e as any)?.message)
+    const { data } = await sb.from('tecnicos').select('*').eq('slug', params.slug).eq('activo', true).single()
+    tecnico = data
+  }
   if (!tecnico) notFound()
 
   const [
