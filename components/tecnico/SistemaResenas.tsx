@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { StarRating, RatingDisplay } from '@/components/ui/StarRating'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -165,6 +166,7 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
   const [ok, setOk] = useState(false)
   const [user, setUser] = useState<any>(null)
   const push = useToast(s => s.push)
+  const router = useRouter()
   const supabase = createClient()
 
   // Detectar usuario logueado y auto-llenar
@@ -229,18 +231,30 @@ function FormularioResena({ tecnicoId }: { tecnicoId: string }) {
     })
     setEnviando(false)
     if (res.ok) {
+      push('¡Reseña enviada! Ya aparece en el perfil con estado "Por revisar".')
       setOk(true)
-      push('¡Reseña enviada! Ya aparece en el perfil. Pasará a verificada tras la moderación.')
+      // Refrescar los Server Components → la nueva reseña aparece arriba en la
+      // lista, el rating del técnico se recalcula y los contadores suben.
+      router.refresh()
+      // Auto-cerrar el card "gracias" después de 3s para que vea su reseña
+      setTimeout(() => {
+        setOk(false)
+        setOpen(false)
+        setRatings({})
+        setRatingSimple(0)
+        setTitulo('')
+        setComentario('')
+      }, 3000)
     } else {
       push('Error — intenta nuevamente', 'error')
     }
   }
 
   if (ok) return (
-    <div className="card text-center">
-      <div className="text-3xl">⭐</div>
+    <div className="card text-center bg-verde/5 border-verde/30">
+      <div className="text-3xl">✅</div>
       <h4 className="font-display text-lg text-azul mt-2">¡Gracias por tu reseña!</h4>
-      <p className="text-sm text-gris-4">Ya aparece en el perfil con etiqueta "Por revisar". Pasará a "Verificada" cuando nuestro equipo la apruebe (24-48 hrs).</p>
+      <p className="text-sm text-gris-4">Tu reseña ya está visible en el perfil con etiqueta "Por revisar". Cuando nuestro equipo la verifique pasará a "Verificada".</p>
       <Badge tone="oro" className="mt-3">⏳ Por revisar</Badge>
     </div>
   )
