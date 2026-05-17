@@ -41,6 +41,10 @@ interface TecnicoAdmin {
   link_google_business: string | null
   google_rating: number | null
   google_total_resenas: number | null
+  facebook_url: string | null
+  instagram_url: string | null
+  youtube_url: string | null
+  tiktok_url: string | null
   etiquetas: string[] | null
   comunas_cobertura: string[] | null
   sucursales_texto: string | null
@@ -286,6 +290,10 @@ function EditarTecnicoForm({ tecnico, regiones, onSave, onCancel, onUserUpdated 
     link_google_business: tecnico.link_google_business || '',
     google_rating: tecnico.google_rating != null ? String(tecnico.google_rating) : '',
     google_total_resenas: tecnico.google_total_resenas != null ? String(tecnico.google_total_resenas) : '',
+    facebook_url: tecnico.facebook_url || '',
+    instagram_url: tecnico.instagram_url || '',
+    youtube_url: tecnico.youtube_url || '',
+    tiktok_url: tecnico.tiktok_url || '',
   })
   const [emailVincular, setEmailVincular] = useState('')
   const [vinculando, setVinculando] = useState(false)
@@ -321,6 +329,10 @@ function EditarTecnicoForm({ tecnico, regiones, onSave, onCancel, onUserUpdated 
       link_google_business: form.link_google_business.trim() || null,
       google_rating: form.google_rating ? parseFloat(form.google_rating) : null,
       google_total_resenas: form.google_total_resenas ? parseInt(form.google_total_resenas) : null,
+      facebook_url: form.facebook_url.trim() || null,
+      instagram_url: form.instagram_url.trim() || null,
+      youtube_url: form.youtube_url.trim() || null,
+      tiktok_url: form.tiktok_url.trim() || null,
     })
   }
 
@@ -451,6 +463,37 @@ function EditarTecnicoForm({ tecnico, regiones, onSave, onCancel, onUserUpdated 
             value={form.video_url}
             onChange={e => setForm({ ...form, video_url: e.target.value })}
             placeholder="https://youtube.com/watch?v=..."
+          />
+        </div>
+      </details>
+
+      {/* REDES SOCIALES */}
+      <details className="rounded-md border-2 border-borde p-3">
+        <summary className="cursor-pointer font-display text-sm text-azul font-bold">📱 Redes sociales</summary>
+        <div className="space-y-3 mt-3">
+          <Input
+            label="Facebook"
+            value={form.facebook_url}
+            onChange={e => setForm({ ...form, facebook_url: e.target.value })}
+            placeholder="https://facebook.com/tu-pagina"
+          />
+          <Input
+            label="Instagram"
+            value={form.instagram_url}
+            onChange={e => setForm({ ...form, instagram_url: e.target.value })}
+            placeholder="https://instagram.com/tu-usuario"
+          />
+          <Input
+            label="YouTube"
+            value={form.youtube_url}
+            onChange={e => setForm({ ...form, youtube_url: e.target.value })}
+            placeholder="https://youtube.com/@tu-canal"
+          />
+          <Input
+            label="TikTok"
+            value={form.tiktok_url}
+            onChange={e => setForm({ ...form, tiktok_url: e.target.value })}
+            placeholder="https://tiktok.com/@tu-usuario"
           />
         </div>
       </details>

@@ -28,6 +28,7 @@ export async function PATCH(req: Request) {
       'telefono', 'whatsapp', 'email_publico', 'sitio_web',
       'link_google_maps', 'link_google_business',
       'google_rating', 'google_total_resenas',
+      'facebook_url', 'instagram_url', 'youtube_url', 'tiktok_url',
       'horarios', 'atiende_24h', 'atiende_domicilio',
       'plan', 'plan_vence_en', 'verificado', 'destacado', 'activo',
     ]

@@ -63,6 +63,10 @@ export interface Tecnico {
   link_personalizado: string | null
   link_google_maps: string | null
   link_google_business: string | null
+  facebook_url: string | null
+  instagram_url: string | null
+  youtube_url: string | null
+  tiktok_url: string | null
   etiquetas: string[] | null
   sucursales_texto: string | null
   video_url: string | null

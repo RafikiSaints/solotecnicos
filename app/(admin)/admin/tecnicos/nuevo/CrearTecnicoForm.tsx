@@ -36,6 +36,11 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
     atiende_24h: false,
     atiende_domicilio: false,
     horarios: HORARIOS_VACIOS as Horarios,
+    // Redes sociales (opcionales)
+    facebook_url: '',
+    instagram_url: '',
+    youtube_url: '',
+    tiktok_url: '',
   })
 
   function toggleCategoria(id: number) {
@@ -80,6 +85,10 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
         atiende_24h: form.atiende_24h,
         atiende_domicilio: form.atiende_domicilio,
         horarios: form.horarios,
+        facebook_url: form.facebook_url,
+        instagram_url: form.instagram_url,
+        youtube_url: form.youtube_url,
+        tiktok_url: form.tiktok_url,
       }),
     })
     if (!res.ok) {
@@ -228,6 +237,37 @@ export function CrearTecnicoForm({ regiones, categorias }: { regiones: Region[];
           onChange={h => setForm({ ...form, horarios: h })}
           atiende24h={form.atiende_24h}
           onToggle24h={v => setForm({ ...form, atiende_24h: v })}
+        />
+      </div>
+
+      <div className="card space-y-3">
+        <h3 className="font-display text-lg text-azul font-bold">📱 Redes sociales (opcional)</h3>
+        <p className="text-xs text-gris-3 -mt-2">
+          Pega la URL completa del perfil. Si lo dejas vacío, no aparece en el perfil público.
+        </p>
+        <Input
+          label="Facebook"
+          value={form.facebook_url}
+          onChange={e => setForm({ ...form, facebook_url: e.target.value })}
+          placeholder="https://facebook.com/tu-pagina"
+        />
+        <Input
+          label="Instagram"
+          value={form.instagram_url}
+          onChange={e => setForm({ ...form, instagram_url: e.target.value })}
+          placeholder="https://instagram.com/tu-usuario"
+        />
+        <Input
+          label="YouTube"
+          value={form.youtube_url}
+          onChange={e => setForm({ ...form, youtube_url: e.target.value })}
+          placeholder="https://youtube.com/@tu-canal"
+        />
+        <Input
+          label="TikTok"
+          value={form.tiktok_url}
+          onChange={e => setForm({ ...form, tiktok_url: e.target.value })}
+          placeholder="https://tiktok.com/@tu-usuario"
         />
       </div>
 

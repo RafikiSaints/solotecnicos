@@ -57,6 +57,10 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
             sitio_web: form.sitio_web,
             link_google_maps: form.link_google_maps,
             link_google_business: form.link_google_business,
+            facebook_url: (form as any).facebook_url,
+            instagram_url: (form as any).instagram_url,
+            youtube_url: (form as any).youtube_url,
+            tiktok_url: (form as any).tiktok_url,
             sucursales_texto: form.sucursales_texto,
             video_url: form.video_url,
             horarios: form.horarios,
@@ -240,6 +244,37 @@ export function EditorPerfil({ tecnico, regiones, categorias, categoriasSeleccio
             </p>
           </div>
         )}
+      </Seccion>
+
+      {/* REDES SOCIALES */}
+      <Seccion titulo="Redes sociales (opcional)">
+        <p className="text-xs text-gris-3 -mt-2">
+          Pegá la URL completa de tu perfil. Si lo dejás vacío, no aparece en el perfil público.
+        </p>
+        <Input
+          label="Facebook"
+          value={(form as any).facebook_url || ''}
+          onChange={e => setForm({ ...form, facebook_url: e.target.value } as any)}
+          placeholder="https://facebook.com/tu-pagina"
+        />
+        <Input
+          label="Instagram"
+          value={(form as any).instagram_url || ''}
+          onChange={e => setForm({ ...form, instagram_url: e.target.value } as any)}
+          placeholder="https://instagram.com/tu-usuario"
+        />
+        <Input
+          label="YouTube"
+          value={(form as any).youtube_url || ''}
+          onChange={e => setForm({ ...form, youtube_url: e.target.value } as any)}
+          placeholder="https://youtube.com/@tu-canal"
+        />
+        <Input
+          label="TikTok"
+          value={(form as any).tiktok_url || ''}
+          onChange={e => setForm({ ...form, tiktok_url: e.target.value } as any)}
+          placeholder="https://tiktok.com/@tu-usuario"
+        />
       </Seccion>
 
       {/* VIDEO PROMOCIONAL (solo Elite) */}

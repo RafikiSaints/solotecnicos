@@ -18,6 +18,7 @@ import { clpFormat, youtubeEmbedUrl } from '@/lib/utils'
 import { limiteNumerico, puedeHacer } from '@/lib/planes'
 import { useEffect } from 'react'
 import { useCotizacionStore } from '@/store/useCotizacionStore'
+import { RedesSociales } from './RedesSociales'
 import type {
   Tecnico, Region, Categoria, Foto, Servicio, Resena, Trabajo, Certificacion,
 } from '@/types/database.types'
@@ -188,6 +189,17 @@ export function PerfilPublico({ tecnico, region, categorias, fotos, servicios, r
                     <span className="text-azul-mid text-xs group-hover:translate-x-0.5 transition-transform">↗</span>
                   </a>
                 ) : null}
+              </div>
+
+              {/* Redes sociales — solo si están cargadas */}
+              <div className="pt-1">
+                <RedesSociales
+                  facebook={tecnico.facebook_url}
+                  instagram={tecnico.instagram_url}
+                  youtube={tecnico.youtube_url}
+                  tiktok={tecnico.tiktok_url}
+                  variant="card"
+                />
               </div>
 
               {/* SVG gradient para estrellas a la mitad */}

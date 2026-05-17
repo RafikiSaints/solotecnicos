@@ -37,6 +37,10 @@ export async function POST(req: Request) {
       atiende_24h: !!body.atiende_24h,
       atiende_domicilio: !!body.atiende_domicilio,
       ...(body.horarios ? { horarios: body.horarios } : {}),
+      facebook_url:  body.facebook_url  || null,
+      instagram_url: body.instagram_url || null,
+      youtube_url:   body.youtube_url   || null,
+      tiktok_url:    body.tiktok_url    || null,
     }
 
     if (!data.nombre_empresa || !data.region_id) {

@@ -23,6 +23,7 @@ export async function PATCH(req: Request) {
       'comunas_cobertura', 'etiquetas', 'sucursales_texto', 'video_url',
       'telefono', 'whatsapp', 'email_publico', 'sitio_web',
       'link_google_maps', 'link_google_business',
+      'facebook_url', 'instagram_url', 'youtube_url', 'tiktok_url',
       'horarios', 'atiende_24h', 'atiende_domicilio',
     ]
     for (const k of FIELDS) {
