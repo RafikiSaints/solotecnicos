@@ -11,3 +11,7 @@ dist
 next-env.d.ts
 .vercel
 coverage
+
+# Excel generado por el script (regenerable y puede contener datos sensibles)
+scripts/plantilla-tecnicos.xlsx
+scripts/tecnicos-*.xlsx
